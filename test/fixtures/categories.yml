@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  display_name: MyString
+  tournament: one
+  category_type: one
+
+two:
+  display_name: MyString
+  tournament: two
+  category_type: two

@@ -10,9 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_28_205448) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_28_222716) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "categories", force: :cascade do |t|
+    t.string "display_name", null: false
+    t.bigint "tournament_id", null: false
+    t.bigint "category_type_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_type_id"], name: "index_categories_on_category_type_id"
+    t.index ["tournament_id"], name: "index_categories_on_tournament_id"
+  end
+
+  create_table "category_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "gender", null: false
+    t.boolean "team", default: false, null: false
+    t.string "rank"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_category_types_on_name", unique: true
+  end
 
   create_table "disciplines", force: :cascade do |t|
     t.string "name"
@@ -30,5 +50,21 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_28_205448) do
     t.index ["discipline_id"], name: "index_seasons_on_discipline_id"
   end
 
+  create_table "tournaments", force: :cascade do |t|
+    t.string "title", null: false
+    t.string "region"
+    t.boolean "official", default: true, null: false
+    t.string "tournament_type", null: false
+    t.date "starts_on"
+    t.date "ends_on"
+    t.bigint "season_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["season_id"], name: "index_tournaments_on_season_id"
+  end
+
+  add_foreign_key "categories", "category_types"
+  add_foreign_key "categories", "tournaments"
   add_foreign_key "seasons", "disciplines"
+  add_foreign_key "tournaments", "seasons"
 end

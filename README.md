@@ -22,3 +22,25 @@ Things you may want to cover:
 * Deployment instructions
 
 * ...
+psql socki_development
+
+ALTER SCHEMA public OWNER TO socki;
+GRANT ALL ON SCHEMA public TO socki;
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO socki;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO socki;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO socki;
+\q
+
+psql socki_test
+
+repeat
+
+
+Discipline
+  └─ Season
+       └─ Competition
+            └─ Category
+                 ├─ Shiajo (live area)
+                 ├─ Match
+                 └─ Competitor (registered in this category)

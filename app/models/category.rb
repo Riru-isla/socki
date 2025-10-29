@@ -5,5 +5,5 @@ class Category < ApplicationRecord
   has_many :shiajos, dependent: :restrict_with_error
   has_many :matches, dependent: :restrict_with_error
 
-  validates :display_name, presence: true
+  validates :name, presence: true
 end

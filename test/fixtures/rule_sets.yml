@@ -2,10 +2,12 @@
 
 one:
   name: MyString
-  tournament: one
-  category_type: one
+  max_time: 1
+  best_of_points: 1
+  draw_system: MyString
 
 two:
   name: MyString
-  tournament: two
-  category_type: two
+  max_time: 1
+  best_of_points: 1
+  draw_system: MyString

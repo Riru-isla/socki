@@ -2,10 +2,14 @@
 
 one:
   name: MyString
-  tournament: one
-  category_type: one
+  category: one
+  current_match_id: 1
+  active: false
+  position: 1
 
 two:
   name: MyString
-  tournament: two
-  category_type: two
+  category: two
+  current_match_id: 1
+  active: false
+  position: 1

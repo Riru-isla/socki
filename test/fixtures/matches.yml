@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  category: one
+  shiajo: one
+  rule_set: one
+  red_competitor_id: 1
+  white_competitor_id: 1
+  max_time: 1
+  best_of_points: 1
+  draw_system: MyString
+  status: MyString
+  winner_id: 1
+  started_at: 2025-10-29 12:33:56
+  ended_at: 2025-10-29 12:33:56
+
+two:
+  category: two
+  shiajo: two
+  rule_set: two
+  red_competitor_id: 1
+  white_competitor_id: 1
+  max_time: 1
+  best_of_points: 1
+  draw_system: MyString
+  status: MyString
+  winner_id: 1
+  started_at: 2025-10-29 12:33:56
+  ended_at: 2025-10-29 12:33:56

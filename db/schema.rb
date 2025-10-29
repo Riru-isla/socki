@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_29_105158) do
+ActiveRecord::Schema[7.2].define(version: 2025_10_29_115918) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -39,6 +39,45 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_29_105158) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_disciplines_on_name", unique: true
+  end
+
+  create_table "match_events", force: :cascade do |t|
+    t.bigint "match_id", null: false
+    t.integer "competitor_id", null: false
+    t.string "side", null: false
+    t.string "event_type", null: false
+    t.integer "at_second"
+    t.integer "point_index_for_side"
+    t.boolean "match_winning", default: false, null: false
+    t.integer "penalty_to"
+    t.string "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["competitor_id"], name: "index_match_events_on_competitor_id"
+    t.index ["event_type"], name: "index_match_events_on_event_type"
+    t.index ["match_id"], name: "index_match_events_on_match_id"
+    t.index ["side"], name: "index_match_events_on_side"
+  end
+
+  create_table "matches", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.bigint "shiajo_id", null: false
+    t.bigint "rule_set_id", null: false
+    t.integer "red_competitor_id", null: false
+    t.integer "white_competitor_id", null: false
+    t.integer "winner_id"
+    t.integer "max_time", null: false
+    t.integer "best_of_points", null: false
+    t.string "draw_system", null: false
+    t.string "status", default: "upcoming", null: false
+    t.datetime "started_at"
+    t.datetime "ended_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_matches_on_category_id"
+    t.index ["rule_set_id"], name: "index_matches_on_rule_set_id"
+    t.index ["shiajo_id"], name: "index_matches_on_shiajo_id"
+    t.index ["status"], name: "index_matches_on_status"
   end
 
   create_table "rule_sets", force: :cascade do |t|
@@ -87,6 +126,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_29_105158) do
 
   add_foreign_key "categories", "category_types"
   add_foreign_key "categories", "tournaments"
+  add_foreign_key "match_events", "matches"
+  add_foreign_key "matches", "categories"
+  add_foreign_key "matches", "rule_sets"
+  add_foreign_key "matches", "shiajos"
   add_foreign_key "seasons", "disciplines"
   add_foreign_key "shiajos", "categories"
   add_foreign_key "tournaments", "seasons"

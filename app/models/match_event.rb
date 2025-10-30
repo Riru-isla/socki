@@ -1,10 +1,17 @@
 class MatchEvent < ApplicationRecord
   belongs_to :match
 
-  validates :side, inclusion: { in: ["red", "white"] }
-  validates :event_type, presence: true
-  validates :competitor_id, presence: true
+  enum :side, { red: "red", white: "white" }, validate: true
 
-  # later we can add enum for event_type if we want:
-  # enum :event_type, { men: "men", kote: "kote", do: "do", tsuki: "tsuki", hansoku: "hansoku", flag: "flag" }, validate: true
+  validates :side, :event_type, :competitor_id, presence: true
+
+  SCORING_TYPES = %w[men kote do tsuki flag].freeze
+
+  def self.scoring_types
+    SCORING_TYPES
+  end
+
+  def scoring?
+    SCORING_TYPES.include?(event_type)
+  end
 end

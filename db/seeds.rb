@@ -45,7 +45,7 @@ competitors = [
   { name: "Kakashi Uchiha", age: 31, province: "Valencia" },
   { name: "Hiro Sato",      age: 22, province: "Barcelona" },
   { name: "Miao Ying",    age: 25, province: "Sevilla" },
-  { name: "Takashi ",     age: 34, province: "Madrid" }
+  { name: "Takashi Murakami",     age: 34, province: "Madrid" }
 ].map { |attrs| Competitor.find_or_create_by!(attrs) }
 
 # === Matches ===

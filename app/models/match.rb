@@ -21,9 +21,9 @@ class Match < ApplicationRecord
     scoring_events.count
   end
 
-  def scoring_event?(etype)
+  def scoring_event?(event_type)
     # you can tune this list later
-    %w[men kote do tsuki flag].include?(etype)
+    %w[men kote do tsuki flag].include?(event_type)
   end
 
   def penalties_for(side)

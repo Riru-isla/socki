@@ -1,13 +1,13 @@
 module Api
   module V1
-    class EventsController < ApplicationController
+    class MatchEventsController < ApplicationController
       # POST /api/v1/matches/:match_id/events
       def create
         match = Match.find(params[:match_id])
 
-        unless [ match.red_competitor_id, match.white_competitor_id ].include?(match_event_params[:competitor_id].to_i)
-          return render json: { ok: false, error: "Competitor does not belong to this match" }, status: :unprocessable_entity
-        end
+        # unless [ match.red_competitor_id, match.white_competitor_id ].include?(match_event_params[:competitor_id].to_i)
+        #   return render json: { ok: false, error: "Competitor does not belong to this match" }, status: :unprocessable_entity
+        # end
 
         event = match.match_events.create!(
           competitor_id: match_event_params[:competitor_id].to_i,
@@ -49,8 +49,8 @@ module Api
         existing + 1
       end
 
-      def scoring_event?(etype)
-        scoring_match_event_types.include?(etype)
+      def scoring_event?(event_type)
+        scoring_match_event_types.include?(event_type)
       end
 
       def scoring_match_event_types

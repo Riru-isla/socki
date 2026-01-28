@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :matches, only: [ :show ] do
-        resources :events, only: [ :create ]
+        resources :match_events, only: [ :create ]
       end
     end
   end

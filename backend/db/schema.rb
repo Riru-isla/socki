@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_10_29_122837) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_12_142145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -71,8 +71,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_29_122837) do
     t.bigint "category_id", null: false
     t.bigint "shiajo_id", null: false
     t.bigint "rule_set_id", null: false
-    t.integer "red_competitor_id", null: false
-    t.integer "white_competitor_id", null: false
+    t.integer "red_competitor_id"
+    t.integer "white_competitor_id"
     t.integer "winner_id"
     t.integer "max_time", null: false
     t.integer "best_of_points", null: false
@@ -134,8 +134,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_10_29_122837) do
 
   add_foreign_key "categories", "category_types"
   add_foreign_key "categories", "tournaments"
+  add_foreign_key "match_events", "competitors", on_delete: :nullify
   add_foreign_key "match_events", "matches"
   add_foreign_key "matches", "categories"
+  add_foreign_key "matches", "competitors", column: "red_competitor_id", on_delete: :nullify
+  add_foreign_key "matches", "competitors", column: "white_competitor_id", on_delete: :nullify
+  add_foreign_key "matches", "competitors", column: "winner_id", on_delete: :nullify
   add_foreign_key "matches", "rule_sets"
   add_foreign_key "matches", "shiajos"
   add_foreign_key "seasons", "disciplines"

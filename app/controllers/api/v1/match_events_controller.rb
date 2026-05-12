@@ -3,11 +3,9 @@ module Api
     class MatchEventsController < ApplicationController
       # POST /api/v1/matches/:match_id/events
       def create
-        match = Match.find(params[:match_id])
-
-        # unless [ match.red_competitor_id, match.white_competitor_id ].include?(match_event_params[:competitor_id].to_i)
-        #   return render json: { ok: false, error: "Competitor does not belong to this match" }, status: :unprocessable_entity
-        # end
+        match = Match.includes(:match_events, :red_competitor, :white_competitor).find(params[:match_id])
+        verify_competitor_belongs_to_match!(match)
+        return if performed?
 
         event = match.match_events.create!(
           competitor_id: match_event_params[:competitor_id].to_i,
@@ -19,15 +17,14 @@ module Api
         )
 
         Rails.logger.info "Broadcasting match update → match_#{match.id}"
-        ActionCable.server.broadcast(
-          "match_#{match.id}",
-          MatchSerializer.new(match.reload).as_json
-        )
+        match.reload
+        serialized = MatchSerializer.new(match).as_json
+        ActionCable.server.broadcast("match_#{match.id}", serialized)
 
         render json: {
           ok: true,
           event_id: event.id,
-          match: MatchSerializer.new(match.reload).as_json
+          match: serialized
         }
       rescue ActiveRecord::RecordInvalid => e
         render json: { ok: false, error: e.record.errors.full_messages }, status: :unprocessable_entity
@@ -36,7 +33,13 @@ module Api
       private
 
       def match_event_params
-        params.require(:match_event).permit(:competitor_id, :side, :event_type, :at_second)
+        params.require(:event).permit(:competitor_id, :side, :event_type, :at_second)
+      end
+
+      def verify_competitor_belongs_to_match!(match)
+        unless [match.red_competitor_id, match.white_competitor_id].include?(match_event_params[:competitor_id].to_i)
+          render json: { ok: false, error: "Competitor does not belong to this match" }, status: :unprocessable_entity
+        end
       end
 
       def next_point_index_for(match, side, event_type)

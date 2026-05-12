@@ -26,13 +26,13 @@ class ProjectorSerializer
       status: m.status,
       started_at: m.started_at,
       ended_at: m.ended_at,
-      red: competitor_json(m.try(:red_side)),   # <-- change to your assoc names
-      blue: competitor_json(m.try(:blue_side)), # <-- change to your assoc names
+      red: competitor_json(m.red_competitor),
+      white: competitor_json(m.white_competitor),
     }
   end
 
   def competitor_json(c)
     return nil unless c
-    { id: c.id, name: c.name, club: c.respond_to?(:club_name) ? c.club_name : nil }
+    { id: c.id, name: c.name }
   end
 end

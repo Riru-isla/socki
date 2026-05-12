@@ -45,7 +45,7 @@ module Shiajos
 
     def current_match
       shiajo.matches.in_progress_only.order(:started_at, :position, :id)
-            .includes(:red_side, :blue_side) # <-- change to your assoc names
+            .includes(:red_competitor, :white_competitor)
             .first
     end
 
@@ -53,14 +53,14 @@ module Shiajos
       scope = shiajo.matches.scheduled_only.ordered
       scope = scope.where("position > ?", current.position) if current.present?
       scope.limit(limit_next)
-           .includes(:red_side, :blue_side) # <-- change to your assoc names
+           .includes(:red_competitor, :white_competitor)
            .to_a
     end
 
     def latest_finished
       shiajo.matches.finished_only
             .order(Arel.sql("COALESCE(ended_at, updated_at) DESC"), position: :desc, id: :desc)
-            .includes(:red_side, :blue_side) # <-- change to your assoc names
+            .includes(:red_competitor, :white_competitor)
             .first
     end
   end

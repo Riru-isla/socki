@@ -13,6 +13,12 @@ Rails.application.routes.draw do
       resources :matches, only: [ :show ] do
         resources :match_events, only: [ :create ]
       end
+      resources :shiajos, only: [] do
+        member do
+          get :projector
+          get :summary
+        end
+      end
     end
   end
 end

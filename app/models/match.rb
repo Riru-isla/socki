@@ -7,6 +7,11 @@ class Match < ApplicationRecord
 
   enum :status, { upcoming: "upcoming", in_progress: "in_progress", finished: "finished" }, validate: true
 
+  scope :in_progress_only, -> { in_progress }
+  scope :scheduled_only,  -> { upcoming }
+  scope :finished_only,   -> { finished }
+  scope :ordered,         -> { order(:position, :id) }
+
   belongs_to :red_competitor, class_name: "Competitor", optional: true
   belongs_to :white_competitor, class_name: "Competitor", optional: true
   belongs_to :winner, class_name: "Competitor", optional: true

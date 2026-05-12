@@ -39,7 +39,7 @@ module Api
             red:   m.red_competitor && { id: m.red_competitor.id, name: m.red_competitor.name },
             white: m.white_competitor && { id: m.white_competitor.id, name: m.white_competitor.name }
           },
-          score: m.score, # you already return {red:, white:}
+          score: { red: m.score_for("red"), white: m.score_for("white") },
           rule_set: { id: m.rule_set.id, max_time: m.rule_set.max_time }
         }
       end

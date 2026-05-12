@@ -23,8 +23,8 @@ class MatchSerializer
         draw_system: @match.draw_system
       },
       competitors: {
-        red: competitor_payload(@match.red_competitor_id),
-        white: competitor_payload(@match.white_competitor_id)
+        red: competitor_payload(@match.red_competitor),
+        white: competitor_payload(@match.white_competitor)
       },
       score: {
         red: @match.score_for("red"),
@@ -36,15 +36,13 @@ class MatchSerializer
 
   private
 
-  def competitor_payload(id)
-    return nil unless id
-    c = Competitor.find_by(id: id)
-    return nil unless c
+  def competitor_payload(competitor)
+    return nil unless competitor
     {
-      id: c.id,
-      name: c.name,
-      age: c.age,
-      province: c.province
+      id: competitor.id,
+      name: competitor.name,
+      age: competitor.age,
+      province: competitor.province
     }
   end
 

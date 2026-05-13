@@ -16,6 +16,12 @@ class Match < ApplicationRecord
   belongs_to :white_competitor, class_name: "Competitor", optional: true
   belongs_to :winner, class_name: "Competitor", optional: true
 
+  belongs_to :red_source_match, class_name: "Match", optional: true
+  belongs_to :white_source_match, class_name: "Match", optional: true
+
+  has_one :red_feeds_into_match, class_name: "Match", foreign_key: "red_source_match_id", dependent: :nullify
+  has_one :white_feeds_into_match, class_name: "Match", foreign_key: "white_source_match_id", dependent: :nullify
+
   validates :max_time, :best_of_points, :draw_system, :status, presence: true
 
   before_validation :apply_ruleset_defaults, on: :create

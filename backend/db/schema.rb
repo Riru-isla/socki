@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_12_142145) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_13_071459) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -82,10 +82,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_12_142145) do
     t.datetime "ended_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "red_source_match_id"
+    t.bigint "white_source_match_id"
     t.index ["category_id"], name: "index_matches_on_category_id"
+    t.index ["red_source_match_id"], name: "index_matches_on_red_source_match_id"
     t.index ["rule_set_id"], name: "index_matches_on_rule_set_id"
     t.index ["shiajo_id"], name: "index_matches_on_shiajo_id"
     t.index ["status"], name: "index_matches_on_status"
+    t.index ["white_source_match_id"], name: "index_matches_on_white_source_match_id"
   end
 
   create_table "rule_sets", force: :cascade do |t|
@@ -140,6 +144,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_12_142145) do
   add_foreign_key "matches", "competitors", column: "red_competitor_id", on_delete: :nullify
   add_foreign_key "matches", "competitors", column: "white_competitor_id", on_delete: :nullify
   add_foreign_key "matches", "competitors", column: "winner_id", on_delete: :nullify
+  add_foreign_key "matches", "matches", column: "red_source_match_id", on_delete: :nullify
+  add_foreign_key "matches", "matches", column: "white_source_match_id", on_delete: :nullify
   add_foreign_key "matches", "rule_sets"
   add_foreign_key "matches", "shiajos"
   add_foreign_key "seasons", "disciplines"

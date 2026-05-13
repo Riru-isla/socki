@@ -75,10 +75,18 @@ bundle exec rspec
 1. **RuleSet values are snapshotted onto Match at creation** (`apply_ruleset_defaults`).
    This is intentional — a match keeps the rules it started with even if the RuleSet changes later.
 
-2. **No authentication yet**. The API and WebSocket are fully open.
+2. **Match competitors use two columns (red/white), not a join table**.
+   Red and white are semantically meaningful in kendo/iaido (kamiza-left vs right, bracket slot origin).
+   This also enables bracket dependency logic: `match3.red_competitor = match1.winner`.
+
+3. **Bracket dependencies are stored as self-referential FKs** on `matches`:
+   - `red_source_match_id` → the match whose winner feeds into red side
+   - `white_source_match_id` → the match whose winner feeds into white side
+
+4. **No authentication yet**. The API and WebSocket are fully open.
    This is acceptable for local tournament LAN usage but must be addressed before any public deployment.
 
-3. **Scoring event types are currently hardcoded for Kendo** (`%w[men kote do tsuki flag]`).
+5. **Scoring event types are currently hardcoded for Kendo** (`%w[men kote do tsuki flag]`).
    When Iaido support is added, this must move to a per-RuleSet or per-Discipline configuration.
 
 ## Active TODOs / Open Work
@@ -87,5 +95,4 @@ bundle exec rspec
 - [ ] PDF export for brackets and match sheets
 - [ ] Multi-shiajo championship orchestration
 - [ ] Authentication (even a simple bearer token)
-- [ ] Add missing foreign keys on competitor columns
 - [ ] Add request specs for `MatchEventsController#create`

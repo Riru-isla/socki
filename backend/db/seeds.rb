@@ -51,12 +51,14 @@ competitors = [
 # === Matches ===
 m1 = Match.find_or_create_by!(
   category: cat_male, shiajo: s1, rule_set: european,
-  red_competitor_id: competitors[0].id, white_competitor_id: competitors[1].id
+  red_competitor_id: competitors[0].id, white_competitor_id: competitors[1].id,
+  position: 1
 )
 
 m2 = Match.find_or_create_by!(
   category: cat_female, shiajo: s2, rule_set: finals,
-  red_competitor_id: competitors[3].id, white_competitor_id: competitors[4].id
+  red_competitor_id: competitors[3].id, white_competitor_id: competitors[4].id,
+  position: 1
 )
 
 # === Match events (example data) ===

@@ -233,7 +233,6 @@ const historyExpanded = ref(false);
         </table>
       </div>
     </div>
-
-    <div v-else>Loading match…</div>
+    </template>
   </div>
 </template>

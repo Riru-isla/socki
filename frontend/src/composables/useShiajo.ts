@@ -9,14 +9,19 @@ export function useShiajo(shiajoId: string | number) {
   const summary = ref<any>(null);
   const status = ref("Loading…");
   const connected = ref(false);
+  const error = ref<string | null>(null);
   let unsubscribe: (() => void) | null = null;
 
   async function load() {
     try {
       summary.value = await fetchShiajoSummary(shiajoId);
       status.value = "Live";
+      error.value = null;
     } catch (e: any) {
-      status.value = `Failed to load: ${e?.message || e}`;
+      error.value = e?.response?.status === 404
+        ? "Shiajo not found"
+        : `Failed to load: ${e?.message || e}`;
+      status.value = "Error";
     }
   }
 
@@ -34,5 +39,5 @@ export function useShiajo(shiajoId: string | number) {
     if (unsubscribe) unsubscribe();
   });
 
-  return { summary, status, connected, refresh: load };
+  return { summary, status, connected, error, refresh: load };
 }

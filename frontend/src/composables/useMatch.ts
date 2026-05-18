@@ -10,6 +10,7 @@ export function useMatch(matchId: string | number) {
   const match = ref<any>(null);
   const status = ref("Loading…");
   const connected = ref(false);
+  const error = ref<string | null>(null);
   let unsubscribe: (() => void) | null = null;
 
   onMounted(async () => {
@@ -17,7 +18,10 @@ export function useMatch(matchId: string | number) {
       match.value = await fetchMatch(matchId);
       status.value = "Ready";
     } catch (e: any) {
-      status.value = `Failed to load: ${e?.message || e}`;
+      error.value = e?.response?.status === 404
+        ? "Match not found"
+        : `Failed to load: ${e?.message || e}`;
+      status.value = "Error";
       return;
     }
 
@@ -43,5 +47,5 @@ export function useMatch(matchId: string | number) {
     if (unsubscribe) unsubscribe();
   });
 
-  return { match, status, connected };
+  return { match, status, connected, error };
 }

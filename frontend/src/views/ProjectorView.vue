@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useMatch } from '../composables/useMatch'
 
 const props = defineProps<{ matchId: string }>()
-const { match, status: matchStatus, connected } = useMatch(props.matchId)
+const { match, status: matchStatus, connected, error } = useMatch(props.matchId)
 
 const cable = ref<'connecting'|'connected'|'disconnected'>('connecting')
 
@@ -36,7 +36,15 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
 </script>
 
 <template>
-  <div class="screen" v-if="match">
+  <div class="screen" v-if="error">
+    <div style="color: #f3b0ae; padding: 24px; background: #3a1b1b; border-radius: 12px;">
+      ⚠️ {{ error }}
+    </div>
+  </div>
+
+  <div class="screen" v-else-if="!match">Cargando…</div>
+
+  <div class="screen" v-else>
     <header class="topbar">
       <div class="left">
         <div class="shiajo">Shiajo: {{ match.shiajo?.name || '—' }}</div>
@@ -100,7 +108,7 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
     </footer>
   </div>
 
-  <div v-else class="screen loading">Cargando…</div>
+
 </template>
 
 <style scoped>

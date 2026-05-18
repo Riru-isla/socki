@@ -2,11 +2,19 @@
 import { useShiajo } from "../composables/useShiajo";
 
 const props = defineProps<{ shiajoId: string }>();
-const { summary, status, connected } = useShiajo(props.shiajoId);
+const { summary, status, connected, error } = useShiajo(props.shiajoId);
 </script>
 
 <template>
-  <div class="screen" v-if="summary">
+  <div class="screen" v-if="error">
+    <div style="color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px;">
+      ⚠️ {{ error }}
+    </div>
+  </div>
+
+  <div class="screen" v-else-if="!summary">Loading…</div>
+
+  <div class="screen" v-else>
     <header class="title">{{ summary.shiajo.name }}</header>
 
     <section v-if="summary.current_match" class="panel current">
@@ -59,7 +67,7 @@ const { summary, status, connected } = useShiajo(props.shiajoId);
 
     <footer class="meta">{{ status }} {{ connected ? "●" : "○" }}</footer>
   </div>
-  <div v-else class="screen">Loading…</div>
+
 </template>
 
 <style scoped>

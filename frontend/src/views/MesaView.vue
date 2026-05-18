@@ -7,7 +7,7 @@ type Side = "red" | "white";
 type EventType = "men" | "kote" | "do" | "tsuki";
 
 const props = defineProps<{ matchId: string }>();
-const { match, status: matchStatus, connected } = useMatch(props.matchId);
+const { match, status: matchStatus, connected, error } = useMatch(props.matchId);
 
 const running = ref(false);
 const startedAt = ref<number | null>(null);
@@ -92,6 +92,13 @@ const historyExpanded = ref(false);
     <h1>Mesa · Match {{ matchId }}</h1>
     <p>{{ matchStatus }} {{ connected ? "●" : "○" }}</p>
 
+    <div v-if="error" style="color: #dc2626; padding: 16px; background: #fef2f2; border-radius: 8px; margin: 12px 0">
+      ⚠️ {{ error }}
+    </div>
+
+    <div v-else-if="!match">Loading match…</div>
+
+    <template v-else>
     <!-- Timer row -->
     <div style="display: flex; align-items: center; gap: 12px; margin: 12px 0">
       <div style="font-size: 28px; font-weight: 700">

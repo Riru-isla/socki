@@ -18,7 +18,7 @@ export async function postMatchEvent(
     competitor_id: number;
     side: "red" | "white";
     event_type: "men" | "kote" | "do" | "tsuki";
-    at_second: number;
+    at_second: string;
   },
 ) {
   const { data } = await api.post(`/matches/${matchId}/match_events`, {

@@ -84,7 +84,7 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
         <ul>
           <li v-for="(e, idx) in redEvents" :key="'r'+idx">
             <span class="pill red-pill">{{ label(e.event_type) }}</span>
-            <span class="time">@ {{ mmss(e.at_second) }}</span>
+            <span class="time">@ {{ e.at_second }}</span>
           </li>
           <li v-if="!redEvents.length" class="muted">—</li>
         </ul>
@@ -95,7 +95,7 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
         <ul>
           <li v-for="(e, idx) in whiteEvents" :key="'w'+idx">
             <span class="pill white-pill">{{ label(e.event_type) }}</span>
-            <span class="time">@ {{ mmss(e.at_second) }}</span>
+            <span class="time">@ {{ e.at_second }}</span>
           </li>
           <li v-if="!whiteEvents.length" class="muted">—</li>
         </ul>

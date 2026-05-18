@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_18_082322) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_18_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -54,7 +54,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_18_082322) do
     t.integer "competitor_id", null: false
     t.string "side", null: false
     t.string "event_type", null: false
-    t.integer "at_second"
+    t.string "at_second"
     t.integer "point_index_for_side"
     t.boolean "match_winning", default: false, null: false
     t.integer "penalty_to"
@@ -82,9 +82,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_18_082322) do
     t.datetime "ended_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "position", null: false
     t.bigint "red_source_match_id"
     t.bigint "white_source_match_id"
-    t.integer "position", null: false
     t.index ["category_id"], name: "index_matches_on_category_id"
     t.index ["red_source_match_id"], name: "index_matches_on_red_source_match_id"
     t.index ["rule_set_id"], name: "index_matches_on_rule_set_id"

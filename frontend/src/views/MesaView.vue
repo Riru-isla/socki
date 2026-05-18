@@ -51,13 +51,21 @@ function resetTimer() {
   nowTick.value = 0;
 }
 
-function currentMs(): number {
+const currentMs = computed(() => {
   nowTick.value; // reactivity trigger
   if (!startedAt.value) return pausedAccum.value;
   return Math.max(0, msNow() - startedAt.value + pausedAccum.value);
-}
+});
 
-const currentSeconds = computed(() => Math.floor(currentMs() / 1000));
+const currentSeconds = computed(() => Math.floor(currentMs.value / 1000));
+
+function formatTime(ms: number): string {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const milliseconds = Math.floor(ms % 1000);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(milliseconds).padStart(3, "0")}`;
+}
 
 async function sendPoint(side: Side, event_type: EventType) {
   if (!match.value) return;
@@ -74,7 +82,7 @@ async function sendPoint(side: Side, event_type: EventType) {
       competitor_id,
       side,
       event_type,
-      at_second: currentSeconds.value,
+      at_second: formatTime(currentMs.value),
     });
     if (!res.ok) {
       sending.value = false;
@@ -217,7 +225,7 @@ const historyExpanded = ref(false);
               style="border-top: 1px solid #e5e7eb"
             >
               <td style="padding: 8px 12px">
-                {{ String(Math.floor(e.at_second / 60)).padStart(2, "0") }}:{{ String(e.at_second % 60).padStart(2, "0") }}
+                {{ e.at_second }}
               </td>
               <td
                 style="padding: 8px 12px; font-weight: 600"

@@ -41,14 +41,11 @@ function label(et: EventType) {
   return map[et] || et
 }
 
-const SCORING_TYPES = ['men', 'kote', 'do', 'tsuki', 'flag']
-const isScoring = (e: any) => SCORING_TYPES.includes(e.event_type?.toLowerCase())
+const redScore = computed(() => match.value?.score?.red ?? 0)
+const whiteScore = computed(() => match.value?.score?.white ?? 0)
 
-const redEvents = computed(() => (match.value?.events || []).filter((e: any) => e.side === 'red' && isScoring(e)))
-const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) => e.side === 'white' && isScoring(e)))
-
-const redScore = computed(() => redEvents.value.length)
-const whiteScore = computed(() => whiteEvents.value.length)
+const redEvents = computed(() => (match.value?.events || []).filter((e: any) => e.side === 'red'))
+const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) => e.side === 'white'))
 </script>
 
 <template>

@@ -167,11 +167,50 @@ onBeforeUnmount(() => {
                     )
                 }}.{{ String(Math.floor((currentMs() % 1000) / 100)) }}
             </div>
-            <button :disabled="running || sending" @click="start">Start</button>
-            <button :disabled="!running || sending" @click="pause">
-                Pause
-            </button>
             <button :disabled="sending" @click="resetTimer">Reset</button>
+        </div>
+
+        <div
+            style="
+                display: flex;
+                gap: 16px;
+                margin: 12px 0;
+            "
+        >
+            <button
+                :disabled="running || sending"
+                @click="start"
+                style="
+                    flex: 1;
+                    font-size: 24px;
+                    font-weight: 700;
+                    padding: 24px;
+                    background: #16a34a;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    cursor: pointer;
+                "
+            >
+                START
+            </button>
+            <button
+                :disabled="!running || sending"
+                @click="pause"
+                style="
+                    flex: 1;
+                    font-size: 24px;
+                    font-weight: 700;
+                    padding: 24px;
+                    background: #dc2626;
+                    color: white;
+                    border: none;
+                    border-radius: 12px;
+                    cursor: pointer;
+                "
+            >
+                PAUSE
+            </button>
         </div>
 
         <div

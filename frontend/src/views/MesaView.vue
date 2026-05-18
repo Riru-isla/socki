@@ -285,8 +285,6 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        </div>
-
         <div v-if="match && match.events.length" style="margin-top: 16px">
             <button
                 @click="historyExpanded = !historyExpanded"
@@ -344,6 +342,6 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <div v-else>Loading match…</div>
+        <div v-if="!match">Loading match…</div>
     </div>
 </template>

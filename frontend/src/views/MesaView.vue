@@ -74,6 +74,7 @@ function resetTimer() {
 }
 
 function currentSeconds(): number {
+    nowTick.value; // dependency: forces re-evaluation on every rAF tick
     if (!startedAt.value) return Math.floor(pausedAccum.value / 1000);
     const elapsed = msNow() - startedAt.value + pausedAccum.value;
     return Math.max(0, Math.floor(elapsed / 1000));

@@ -174,17 +174,17 @@ onBeforeUnmount(() => {
             <button
                 :disabled="sending"
                 @click="running ? pause() : start()"
-                style="
-                    width: 100%;
-                    font-size: 24px;
-                    font-weight: 700;
-                    padding: 24px;
-                    background: running ? #dc2626 : #16a34a;
-                    color: white;
-                    border: none;
-                    border-radius: 12px;
-                    cursor: pointer;
-                "
+                :style="{
+                    width: '100%',
+                    fontSize: '24px',
+                    fontWeight: 700,
+                    padding: '24px',
+                    background: running ? '#dc2626' : '#16a34a',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                }"
             >
                 {{ running ? "PAUSE" : "START" }}
             </button>

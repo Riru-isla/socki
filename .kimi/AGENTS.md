@@ -63,6 +63,60 @@ bundle exec rspec
 | `/mesa/:matchId` | MesaView | Referee scoring panel |
 | `/projector/shiajo/:shiajoId` | ShiajoProjectorView | Arena overview |
 
+## Frontend Architecture
+
+### Data Flow (Server-Authoritative)
+
+```
+User action → POST to Rails API → DB update → ActionCable broadcast → All clients refresh
+```
+
+The backend is the single source of truth. The frontend never computes its own score — it reads `match.score` from the API response.
+
+### Composables (Reusable State + Logic)
+
+Located in `frontend/src/composables/`. These are functions that bundle reactive state, HTTP fetching, and WebSocket subscription.
+
+**`useMatch(matchId)`**
+- Fetches match via HTTP on mount
+- Subscribes to `MatchChannel` via ActionCable
+- Returns reactive `{ match, status, connected }`
+- Used by: MesaView, ProjectorView, any match screen
+
+**`useShiajo(shiajoId)`**
+- Fetches shiajo summary via HTTP on mount
+- Subscribes to `ShiajoChannel` via ActionCable
+- Returns reactive `{ summary, status, connected, refresh }`
+- Used by: ShiajoProjectorView, any shiajo screen
+
+### Adding a New Screen
+
+```vue
+<script setup>
+import { useMatch } from "../composables/useMatch";
+const props = defineProps<{ matchId: string }>();
+const { match, status, connected } = useMatch(props.matchId);
+</script>
+
+<template>
+  <div v-if="match">
+    Score: {{ match.score.red }} — {{ match.score.white }}
+  </div>
+  <div v-else>Loading…</div>
+</template>
+```
+
+No manual `fetch`, no manual `subscribe`, no cleanup. The composable handles everything.
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/composables/useMatch.ts` | Match fetch + ActionCable subscription |
+| `src/composables/useShiajo.ts` | Shiajo summary fetch + ActionCable subscription |
+| `src/lib/api.ts` | HTTP client (Axios) and endpoint wrappers |
+| `src/lib/cable.ts` | Action Cable consumer and subscription helpers |
+
 ## Code Style & Conventions
 
 - Backend: RuboCop with `rubocop-rails-omakase`

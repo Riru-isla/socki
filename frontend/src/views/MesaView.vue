@@ -73,11 +73,10 @@ function resetTimer() {
     nowTick.value = 0;
 }
 
-function currentSeconds(): number {
+function currentMs(): number {
     nowTick.value; // dependency: forces re-evaluation on every rAF tick
-    if (!startedAt.value) return Math.floor(pausedAccum.value / 1000);
-    const elapsed = msNow() - startedAt.value + pausedAccum.value;
-    return Math.max(0, Math.floor(elapsed / 1000));
+    if (!startedAt.value) return pausedAccum.value;
+    return Math.max(0, msNow() - startedAt.value + pausedAccum.value);
 }
 
 async function sendPoint(side: Side, event_type: EventType) {
@@ -159,9 +158,14 @@ onBeforeUnmount(() => {
         >
             <div style="font-size: 28px; font-weight: 700">
                 {{
-                    String(Math.floor(currentSeconds() / 60)).padStart(2, "0")
+                    String(Math.floor(currentMs() / 60000)).padStart(2, "0")
                 }}:
-                {{ String(currentSeconds() % 60).padStart(2, "0") }}
+                {{
+                    String(Math.floor((currentMs() % 60000) / 1000)).padStart(
+                        2,
+                        "0",
+                    )
+                }}.{{ String(Math.floor((currentMs() % 1000) / 100)) }}
             </div>
             <button :disabled="running || sending" @click="start">Start</button>
             <button :disabled="!running || sending" @click="pause">

@@ -170,46 +170,23 @@ onBeforeUnmount(() => {
             <button :disabled="sending" @click="resetTimer">Reset</button>
         </div>
 
-        <div
-            style="
-                display: flex;
-                gap: 16px;
-                margin: 12px 0;
-            "
-        >
+        <div style="margin: 12px 0">
             <button
-                :disabled="running || sending"
-                @click="start"
+                :disabled="sending"
+                @click="running ? pause() : start()"
                 style="
-                    flex: 1;
+                    width: 100%;
                     font-size: 24px;
                     font-weight: 700;
                     padding: 24px;
-                    background: #16a34a;
+                    background: running ? #dc2626 : #16a34a;
                     color: white;
                     border: none;
                     border-radius: 12px;
                     cursor: pointer;
                 "
             >
-                START
-            </button>
-            <button
-                :disabled="!running || sending"
-                @click="pause"
-                style="
-                    flex: 1;
-                    font-size: 24px;
-                    font-weight: 700;
-                    padding: 24px;
-                    background: #dc2626;
-                    color: white;
-                    border: none;
-                    border-radius: 12px;
-                    cursor: pointer;
-                "
-            >
-                PAUSE
+                {{ running ? "PAUSE" : "START" }}
             </button>
         </div>
 
@@ -225,12 +202,13 @@ onBeforeUnmount(() => {
             <div
                 style="
                     padding: 12px;
-                    border: 1px solid #ddd;
+                    border: 2px solid #dc2626;
                     border-radius: 8px;
+                    background: #fef2f2;
                 "
             >
-                <div style="font-weight: 700; margin-bottom: 8px">
-                    Red · {{ match.score.red }}
+                <div style="font-weight: 700; margin-bottom: 8px; color: #dc2626">
+                    RED · {{ match.score.red }}
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                     <button
@@ -260,12 +238,13 @@ onBeforeUnmount(() => {
             <div
                 style="
                     padding: 12px;
-                    border: 1px solid #ddd;
+                    border: 2px solid #525252;
                     border-radius: 8px;
+                    background: #fafafa;
                 "
             >
-                <div style="font-weight: 700; margin-bottom: 8px">
-                    White · {{ match.score.white }}
+                <div style="font-weight: 700; margin-bottom: 8px; color: #171717">
+                    WHITE · {{ match.score.white }}
                 </div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap">
                     <button

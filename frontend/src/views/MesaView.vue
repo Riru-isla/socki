@@ -21,10 +21,19 @@ interface MatchCompetitors {
   white: Competitor | null;
 }
 
+interface MatchEvent {
+  id: number;
+  side: Side;
+  event_type: string;
+  at_second: number;
+  created_at: string;
+}
+
 interface MatchData {
   id: number;
   competitors: MatchCompetitors;
   score: MatchScore;
+  events: MatchEvent[];
 }
 
 const props = defineProps<{ matchId: string }>();
@@ -37,6 +46,7 @@ const nowTick = ref(0); // forces computed update
 let timerId: number | null = null;
 let unsubscribe: null | (() => void) = null;
 const sending = ref(false);
+const historyExpanded = ref(false);
 
 function msNow() {
     return performance.now();
@@ -83,7 +93,7 @@ async function sendPoint(side: Side, event_type: EventType) {
     if (!match.value) return;
     pause();
     sending.value = true;
-    status.value = `Sending ${side} · ${event_type} @ ${currentSeconds()}s…`;
+    status.value = `Sending ${side} · ${event_type} @ ${Math.floor(currentMs() / 1000)}s…`;
 
     const competitor_id =
         side === "red"
@@ -95,7 +105,7 @@ async function sendPoint(side: Side, event_type: EventType) {
             competitor_id,
             side,
             event_type,
-            at_second: currentSeconds(),
+            at_second: Math.floor(currentMs() / 1000),
         });
         if (!res.ok) {
             status.value = `Error: ${res.error || "unknown"}`;
@@ -272,6 +282,65 @@ onBeforeUnmount(() => {
                         Tsuki
                     </button>
                 </div>
+            </div>
+        </div>
+
+        </div>
+
+        <div v-if="match && match.events.length" style="margin-top: 16px">
+            <button
+                @click="historyExpanded = !historyExpanded"
+                style="
+                    width: 100%;
+                    padding: 12px;
+                    font-weight: 600;
+                    background: #f3f4f6;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    cursor: pointer;
+                "
+            >
+                {{ historyExpanded ? "▼" : "▶" }} History ({{ match.events.length }} events)
+            </button>
+
+            <div
+                v-if="historyExpanded"
+                style="
+                    margin-top: 8px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 8px;
+                    overflow: hidden;
+                "
+            >
+                <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+                    <thead>
+                        <tr style="background: #f9fafb">
+                            <th style="padding: 8px 12px; text-align: left">Time</th>
+                            <th style="padding: 8px 12px; text-align: left">Side</th>
+                            <th style="padding: 8px 12px; text-align: left">Point</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr
+                            v-for="e in [...match.events].reverse()"
+                            :key="e.id"
+                            style="border-top: 1px solid #e5e7eb"
+                        >
+                            <td style="padding: 8px 12px">
+                                {{ String(Math.floor(e.at_second / 60)).padStart(2, "0") }}:{{ String(e.at_second % 60).padStart(2, "0") }}
+                            </td>
+                            <td
+                                style="padding: 8px 12px; font-weight: 600"
+                                :style="{ color: e.side === 'red' ? '#dc2626' : '#171717' }"
+                            >
+                                {{ e.side.toUpperCase() }}
+                            </td>
+                            <td style="padding: 8px 12px; text-transform: uppercase">
+                                {{ e.event_type }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 

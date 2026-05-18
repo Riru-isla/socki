@@ -46,7 +46,7 @@ services:
       redis:
         condition: service_healthy
     command: >
-      sh -c "./bin/rails db:prepare && ./bin/rails server -b 0.0.0.0"
+      sh -c "rm -f /rails/tmp/pids/server.pid && ./bin/rails db:prepare && ./bin/rails server -b 0.0.0.0"
 
   frontend:
     image: node:20-alpine

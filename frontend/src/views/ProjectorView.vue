@@ -1,33 +1,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { fetchMatch } from '../lib/api'
-import { subscribeMatch } from '../lib/cable'
-
-type EventType = 'men' | 'kote' | 'do' | 'tsuki'
-type Side = 'red' | 'white'
+import { useMatch } from '../composables/useMatch'
 
 const props = defineProps<{ matchId: string }>()
-const match = ref<any>(null)
+const { match, status: matchStatus, connected } = useMatch(props.matchId)
+
 const cable = ref<'connecting'|'connected'|'disconnected'>('connecting')
-let unsubscribe: null | (() => void) = null
 
-async function loadOnce() {
-  const data = await fetchMatch(props.matchId)
-  match.value = data
-}
-
-onMounted(async () => {
-  await loadOnce()
-  unsubscribe = subscribeMatch(props.matchId, {
-    connected: () => (cable.value = 'connected'),
-    disconnected: () => (cable.value = 'disconnected'),
-    received: (payload) => {
-      if (payload?.id == Number(props.matchId)) match.value = payload
-    },
-  })
+// Mirror connected state to cable visual indicator
+onMounted(() => {
+  cable.value = 'connecting'
+  const check = setInterval(() => {
+    if (connected.value) cable.value = 'connected'
+    else if (matchStatus.value.includes('Fail')) cable.value = 'disconnected'
+  }, 500)
+  onBeforeUnmount(() => clearInterval(check))
 })
-
-onBeforeUnmount(() => { if (unsubscribe) unsubscribe() })
 
 function mmss(totalSeconds?: number) {
   const s = Number(totalSeconds ?? 0)
@@ -35,8 +23,7 @@ function mmss(totalSeconds?: number) {
   const sPart = Math.floor(s % 60).toString().padStart(2, '0')
   return `${mPart}:${sPart}`
 }
-function label(et: EventType) {
-  // Capitalize Spanish-ish labels
+function label(et: string) {
   const map: Record<string,string> = { men: 'Men', kote: 'Kote', do: 'Do', tsuki: 'Tsuki' }
   return map[et] || et
 }
@@ -62,32 +49,27 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
     </header>
 
     <main class="grid4">
-      <!-- LEFT: RED competitor -->
       <section class="side red">
         <div class="side-head red-head">ROJO</div>
         <div class="name clamp">{{ match.competitors.red?.name || '—' }}</div>
       </section>
 
-      <!-- COL 2: RED SCORE -->
       <section class="score red-score">
         <div class="score-num">{{ redScore }}</div>
         <div class="score-label">PUNTOS</div>
       </section>
 
-      <!-- COL 3: WHITE SCORE -->
       <section class="score white-score">
         <div class="score-num">{{ whiteScore }}</div>
         <div class="score-label">PUNTOS</div>
       </section>
 
-      <!-- RIGHT: WHITE competitor -->
       <section class="side white">
         <div class="side-head white-head">BLANCO</div>
         <div class="name clamp">{{ match.competitors.white?.name || '—' }}</div>
       </section>
     </main>
 
-    <!-- ✨ NEW: timelines under the points -->
     <section class="timelines">
       <div class="timeline red-tl">
         <h3>Acciones ROJO</h3>
@@ -113,12 +95,8 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
     </section>
 
     <footer class="footer">
-      <div class="time">
-        Tiempo (config): {{ match.rule_set?.max_time }}s
-      </div>
-      <div class="meta">
-        Match #{{ match.id }}
-      </div>
+      <div class="time">Tiempo (config): {{ match.rule_set?.max_time }}s</div>
+      <div class="meta">Match #{{ match.id }}</div>
     </footer>
   </div>
 
@@ -135,7 +113,6 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
   box-sizing: border-box;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
 }
-
 .topbar {
   display: flex; justify-content: space-between; align-items: baseline;
   margin-bottom: 16px;
@@ -144,7 +121,6 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
 .shiajo { font-weight: 800; letter-spacing: .06em; color: #d0d0d5; text-transform: uppercase; }
 .category { color: var(--muted); font-weight: 600; }
 .topbar .right { display: flex; gap: 12px; align-items: center; }
-
 .badge {
   padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 14px; text-transform: uppercase;
   background: #22232a; color: #c9c9cf; letter-spacing: .04em;
@@ -152,20 +128,16 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
 .badge.in_progress { background: #1b3a1b; color: #aef3ae; }
 .badge.upcoming    { background: #232130; color: #cfc8ff; }
 .badge.finished    { background: #3a1b1b; color: #f3b0ae; }
-
 .cable { font-size: 12px; line-height: 1; }
 .cable[data-state="connected"]   { color: #4ade80; text-shadow: 0 0 10px rgba(74,222,128,.5); }
 .cable[data-state="connecting"]  { color: #f59e0b; }
 .cable[data-state="disconnected"]{ color: #ef4444; }
-
 .grid4 {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
   gap: 24px;
   align-items: stretch;
 }
-
-/* Side cards */
 .side {
   background: var(--card);
   border-radius: 20px;
@@ -183,8 +155,6 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
   font-size: 40px; font-weight: 800; line-height: 1.1;
   text-shadow: 0 2px 0 rgba(0,0,0,.25);
 }
-
-/* Score tiles */
 .score {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
   border-radius: 20px;
@@ -201,8 +171,6 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
 .score-label {
   margin-top: 6px; font-size: 14px; letter-spacing: .18em; color: #a6a6ad; font-weight: 800;
 }
-
-/* ✨ Timelines */
 .timelines {
   margin-top: 18px;
   display: grid;
@@ -231,20 +199,15 @@ const whiteEvents = computed(() => (match.value?.events || []).filter((e: any) =
 .white-pill { background:#e5e5e5; color:#111; }
 .time { color:#bdbdc7; font-weight:700; font-size: 12px; }
 .muted { color:#7b7b86; }
-
 .footer {
   display:flex; justify-content: space-between; align-items:center;
   margin-top: 22px; color: #a7a7b1; font-weight: 600;
 }
 .time { opacity: .85; }
 .meta { opacity: .65; }
-
-/* name clamp to avoid overflow */
 .clamp {
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-
-/* Basic responsiveness */
 @media (max-width: 1100px) {
   .grid4 { grid-template-columns: 1fr 1fr; }
   .score { min-height: 180px; }

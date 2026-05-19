@@ -1,12 +1,36 @@
 version: 2
+
 updates:
-- package-ecosystem: bundler
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-- package-ecosystem: github-actions
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
+  # Backend Ruby dependencies. Group minor + patch bumps so we get one
+  # rollup PR a month instead of a flurry of individual ones.
+  - package-ecosystem: bundler
+    directory: "/backend"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      ruby-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Rails major-version bumps are a project-level decision (touches
+      # the whole stack, deprecation guides, migration tooling). We'll
+      # take them on intentionally rather than chasing dependabot PRs.
+      - dependency-name: rails
+        update-types:
+          - version-update:semver-major
+
+  # GitHub Actions versions. Lower volume than gems; group all into one
+  # PR a month.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"

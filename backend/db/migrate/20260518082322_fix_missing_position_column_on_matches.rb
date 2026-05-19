@@ -18,8 +18,8 @@ class FixMissingPositionColumnOnMatches < ActiveRecord::Migration[7.2]
     change_column_null :matches, :position, false
 
     # Add indexes
-    add_index :matches, [:shiajo_id, :position], unique: true unless index_exists?(:matches, [:shiajo_id, :position])
-    add_index :matches, [:shiajo_id, :status] unless index_exists?(:matches, [:shiajo_id, :status])
+    add_index :matches, [ :shiajo_id, :position ], unique: true unless index_exists?(:matches, [ :shiajo_id, :position ])
+    add_index :matches, [ :shiajo_id, :status ] unless index_exists?(:matches, [ :shiajo_id, :status ])
   end
 
   def down

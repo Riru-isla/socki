@@ -7,7 +7,7 @@ class ApplicationController < ActionController::API
   private
 
   def configure_devise_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:email, :password])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [ :email, :password ])
   end
 
   # TODO(auth-restore): admin enforcement is temporarily disabled while the

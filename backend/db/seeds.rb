@@ -23,8 +23,8 @@ tournament = Tournament.find_or_create_by!(
   region: "Madrid",
   official: true,
   tournament_type: "regional_championship",
-  starts_on: Date.new(2025,3,21),
-  ends_on: Date.new(2025,3,22),
+  starts_on: Date.new(2025, 3, 21),
+  ends_on: Date.new(2025, 3, 22),
   season: season
 )
 

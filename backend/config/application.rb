@@ -53,6 +53,5 @@ module Socki
       g.routing_specs false
       g.controller_specs false
     end
-
   end
 end

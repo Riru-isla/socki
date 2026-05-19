@@ -27,7 +27,7 @@ class ProjectorSerializer
       started_at: m.started_at,
       ended_at: m.ended_at,
       red: competitor_json(m.red_competitor),
-      white: competitor_json(m.white_competitor),
+      white: competitor_json(m.white_competitor)
     }
   end
 

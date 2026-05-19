@@ -37,7 +37,7 @@ module Api
       end
 
       def verify_competitor_belongs_to_match!(match)
-        unless [match.red_competitor_id, match.white_competitor_id].include?(match_event_params[:competitor_id].to_i)
+        unless [ match.red_competitor_id, match.white_competitor_id ].include?(match_event_params[:competitor_id].to_i)
           render json: { ok: false, error: "Competitor does not belong to this match" }, status: :unprocessable_entity
         end
       end

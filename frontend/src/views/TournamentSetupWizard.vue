@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { fetchTournament, fetchCategoryTypes, createCategory, createShiajo } from "../lib/api";
+import {
+  fetchTournament,
+  fetchCategoryTypes,
+  createCategory,
+  createShiajo,
+  fetchCompetitors,
+  createCompetitor,
+  deleteCompetitor,
+} from "../lib/api";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,6 +25,7 @@ const STEPS: { id: Step; label: string }[] = [
 
 const tournament = ref<any>(null);
 const categoryTypes = ref<any[]>([]);
+const competitors = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const currentStep = ref<Step>(1);
@@ -33,25 +42,40 @@ const activeCategoryId = ref<number | null>(null);
 const addingShiajo = ref(false);
 const shiajoError = ref<string | null>(null);
 
+// step 2 — add competitor form
+const newCompetitorName = ref("");
+const newCompetitorAge = ref<number | null>(null);
+const newCompetitorProvince = ref("");
+const addingCompetitor = ref(false);
+const competitorError = ref<string | null>(null);
+
 const step1Complete = computed(() => {
   const cats = tournament.value?.categories ?? [];
   return cats.length > 0 && cats.every((c: any) => c.shiajos.length > 0);
 });
 
+// "Complete enough to advance" — at least two competitors exist in the
+// pool (the minimum needed to form a match). This is a global pool
+// check, not per-tournament.
+const step2Complete = computed(() => competitors.value.length >= 2);
+
 onMounted(async () => {
   await load();
   // Resume on the first incomplete step.
-  if (step1Complete.value) currentStep.value = 2;
+  if (step1Complete.value && step2Complete.value) currentStep.value = 3;
+  else if (step1Complete.value) currentStep.value = 2;
 });
 
 async function load() {
   try {
-    const [t, types] = await Promise.all([
+    const [t, types, comps] = await Promise.all([
       fetchTournament(tournamentId),
       fetchCategoryTypes(),
+      fetchCompetitors(),
     ]);
     tournament.value = t;
     categoryTypes.value = types;
+    competitors.value = comps;
     if (types.length && newCategoryTypeId.value === null) {
       newCategoryTypeId.value = types[0].id;
     }
@@ -103,6 +127,40 @@ async function addShiajo(categoryId: number) {
   }
 }
 
+async function addCompetitor() {
+  if (!newCompetitorName.value) {
+    competitorError.value = "Name is required";
+    return;
+  }
+  addingCompetitor.value = true;
+  competitorError.value = null;
+  try {
+    await createCompetitor({
+      name: newCompetitorName.value,
+      age: newCompetitorAge.value || null,
+      province: newCompetitorProvince.value || null,
+    });
+    await load();
+    newCompetitorName.value = "";
+    newCompetitorAge.value = null;
+    newCompetitorProvince.value = "";
+  } catch (e: any) {
+    competitorError.value = e.response?.data?.errors?.join(", ") || "Failed to add competitor";
+  } finally {
+    addingCompetitor.value = false;
+  }
+}
+
+async function removeCompetitor(id: number) {
+  if (!confirm("Remove this competitor from the global pool?")) return;
+  try {
+    await deleteCompetitor(id);
+    await load();
+  } catch (e: any) {
+    competitorError.value = e.response?.data?.error || "Failed to remove competitor";
+  }
+}
+
 function goToStep(step: Step) {
   currentStep.value = step;
 }
@@ -120,6 +178,7 @@ function finish() {
 }
 
 const canAdvanceFromStep1 = computed(() => step1Complete.value);
+const canAdvanceFromStep2 = computed(() => step2Complete.value);
 </script>
 
 <template>
@@ -211,11 +270,51 @@ const canAdvanceFromStep1 = computed(() => step1Complete.value);
         </div>
       </div>
 
-      <!-- step 2/3/4 placeholders -->
-      <div v-if="currentStep === 2" style="border: 1px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; color: #6b7280">
-        <div style="font-size: 32px; margin-bottom: 8px">🥋</div>
-        <div style="font-weight: 600; margin-bottom: 4px">Competitors</div>
-        <div style="font-size: 13px">Coming in the next chunk: add competitors to the global pool.</div>
+      <!-- step 2: Competitors (global pool) -->
+      <div v-if="currentStep === 2">
+        <div style="color: #6b7280; font-size: 13px; margin-bottom: 16px">
+          Athletes are shared across all championships. Add anyone missing from the pool below — you'll assign them to categories in the next step.
+        </div>
+
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 24px">
+          <h3 style="margin: 0 0 12px 0; font-size: 15px">Add Competitor</h3>
+          <div v-if="competitorError" style="color: #dc2626; font-size: 13px; margin-bottom: 8px">⚠️ {{ competitorError }}</div>
+          <form @submit.prevent="addCompetitor" style="display: flex; gap: 10px; align-items: flex-end">
+            <div style="flex: 2">
+              <input v-model="newCompetitorName" type="text" placeholder="Name *" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; box-sizing: border-box" />
+            </div>
+            <div style="width: 80px">
+              <input v-model.number="newCompetitorAge" type="number" min="0" placeholder="Age" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; box-sizing: border-box" />
+            </div>
+            <div style="flex: 1">
+              <input v-model="newCompetitorProvince" type="text" placeholder="Province" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; box-sizing: border-box" />
+            </div>
+            <button type="submit" :disabled="addingCompetitor" style="padding: 10px 18px; font-size: 14px; font-weight: 600; background: #171717; color: white; border: none; border-radius: 8px; cursor: pointer">
+              {{ addingCompetitor ? "Adding…" : "Add" }}
+            </button>
+          </form>
+        </div>
+
+        <div style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600">
+          {{ competitors.length }} {{ competitors.length === 1 ? "competitor" : "competitors" }} in pool
+        </div>
+
+        <div v-if="competitors.length" style="display: grid; gap: 8px">
+          <div v-for="c in competitors" :key="c.id" style="display: flex; justify-content: space-between; align-items: center; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; background: white">
+            <div>
+              <div style="font-weight: 600">{{ c.name }}</div>
+              <div v-if="c.age || c.province" style="font-size: 12px; color: #6b7280; margin-top: 2px">
+                <span v-if="c.age">{{ c.age }} yrs</span>
+                <span v-if="c.age && c.province"> · </span>
+                <span v-if="c.province">{{ c.province }}</span>
+              </div>
+            </div>
+            <button @click="removeCompetitor(c.id)" title="Remove from pool" style="background: transparent; color: #9ca3af; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px">×</button>
+          </div>
+        </div>
+        <div v-else style="color: #9ca3af; text-align: center; padding: 40px 0">
+          No competitors yet. Add the first one above.
+        </div>
       </div>
       <div v-if="currentStep === 3" style="border: 1px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; color: #6b7280">
         <div style="font-size: 32px; margin-bottom: 8px">📝</div>
@@ -237,6 +336,9 @@ const canAdvanceFromStep1 = computed(() => step1Complete.value);
         <div style="display: flex; gap: 12px">
           <button v-if="currentStep === 1 && !canAdvanceFromStep1" disabled style="padding: 10px 18px; font-size: 14px; background: #e5e7eb; color: #9ca3af; border: none; border-radius: 8px; cursor: not-allowed">
             Add a category with a shiajo to continue
+          </button>
+          <button v-else-if="currentStep === 2 && !canAdvanceFromStep2" disabled style="padding: 10px 18px; font-size: 14px; background: #e5e7eb; color: #9ca3af; border: none; border-radius: 8px; cursor: not-allowed">
+            Add at least 2 competitors to continue
           </button>
           <button v-else-if="currentStep < 4" @click="next" style="padding: 10px 18px; font-size: 14px; font-weight: 600; background: #171717; color: white; border: none; border-radius: 8px; cursor: pointer">
             Next →

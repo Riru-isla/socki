@@ -103,3 +103,21 @@ export async function fetchDisciplines() {
   const { data } = await api.get("/disciplines");
   return data;
 }
+
+export async function fetchCompetitors() {
+  const { data } = await api.get("/competitors");
+  return data;
+}
+
+export async function createCompetitor(payload: {
+  name: string;
+  age?: number | null;
+  province?: string | null;
+}) {
+  const { data } = await api.post("/competitors", { competitor: payload });
+  return data;
+}
+
+export async function deleteCompetitor(id: number) {
+  await api.delete(`/competitors/${id}`);
+}

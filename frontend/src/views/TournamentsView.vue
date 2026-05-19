@@ -23,7 +23,11 @@ function goNew() {
 }
 
 function goDetail(id: number) {
-  router.push(`/tournaments/${id}`);
+  // While the wizard is still being built, the most useful landing
+  // page for an existing championship is the setup flow itself — it
+  // resumes on the first incomplete step. The post-wizard detail
+  // view is reachable via the wizard's Finish button.
+  router.push(`/tournaments/${id}/setup`);
 }
 </script>
 

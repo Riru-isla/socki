@@ -8,6 +8,7 @@ import ShiajoProjectorView from "./views/ShiajoProjectorView.vue";
 import TournamentsView from "./views/TournamentsView.vue";
 import TournamentNewView from "./views/TournamentNewView.vue";
 import TournamentDetailView from "./views/TournamentDetailView.vue";
+import TournamentSetupWizard from "./views/TournamentSetupWizard.vue";
 import SeasonsView from "./views/SeasonsView.vue";
 import CategoryTypesView from "./views/CategoryTypesView.vue";
 
@@ -16,6 +17,7 @@ const routes = [
   { path: "/tournaments", component: TournamentsView },
   { path: "/tournaments/new", component: TournamentNewView },
   { path: "/tournaments/:id", component: TournamentDetailView, props: true },
+  { path: "/tournaments/:id/setup", component: TournamentSetupWizard, props: true },
   { path: "/seasons", component: SeasonsView },
   { path: "/category-types", component: CategoryTypesView },
   { path: "/projector/:matchId", component: ProjectorView, props: true },

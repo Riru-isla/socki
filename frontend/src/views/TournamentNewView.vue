@@ -43,7 +43,7 @@ async function submit() {
       ends_on: endsOn.value,
       season_id: seasonId.value,
     });
-    router.push(`/tournaments/${created.id}`);
+    router.push(`/tournaments/${created.id}/setup`);
   } catch (e: any) {
     saving.value = false;
     error.value = e.response?.data?.errors?.join(", ") || "Failed to create championship";

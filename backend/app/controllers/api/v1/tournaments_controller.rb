@@ -81,7 +81,9 @@ module Api
           status: m.status,
           shiajo: { id: m.shiajo.id, name: m.shiajo.name },
           red_competitor: m.red_competitor && { id: m.red_competitor.id, name: m.red_competitor.name },
-          white_competitor: m.white_competitor && { id: m.white_competitor.id, name: m.white_competitor.name }
+          white_competitor: m.white_competitor && { id: m.white_competitor.id, name: m.white_competitor.name },
+          red_source_match_id: m.red_source_match_id,
+          white_source_match_id: m.white_source_match_id
         }
       end
 

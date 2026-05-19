@@ -23,7 +23,11 @@ module Api
       private
 
       def match_params
-        params.require(:match).permit(:shiajo_id, :red_competitor_id, :white_competitor_id, :rule_set_id, :position)
+        params.require(:match).permit(
+          :shiajo_id, :red_competitor_id, :white_competitor_id,
+          :red_source_match_id, :white_source_match_id,
+          :rule_set_id, :position
+        )
       end
 
       def next_position_for(shiajo_id)

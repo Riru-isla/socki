@@ -25,6 +25,7 @@ class Match < ApplicationRecord
   validates :max_time, :best_of_points, :draw_system, :status, presence: true
 
   before_validation :apply_ruleset_defaults, on: :create
+  after_update :propagate_winner_to_downstream_matches, if: :saved_change_to_winner_id?
 
   # returns current score for each side based on events
   def score_for(side)
@@ -48,5 +49,16 @@ class Match < ApplicationRecord
     self.max_time ||= rule_set.max_time
     self.best_of_points ||= rule_set.best_of_points
     self.draw_system ||= rule_set.draw_system
+  end
+
+  # When this match's winner is set, fill in the corresponding side of
+  # any downstream match that lists this one as a source. The has_one
+  # relations defined above:
+  #   red_feeds_into_match   — downstream where red_source_match_id   == self.id
+  #   white_feeds_into_match — downstream where white_source_match_id == self.id
+  def propagate_winner_to_downstream_matches
+    return unless winner_id
+    red_feeds_into_match&.update(red_competitor_id: winner_id)
+    white_feeds_into_match&.update(white_competitor_id: winner_id)
   end
 end

@@ -19,17 +19,22 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: backend/.ruby-version
+          ruby-version-file: backend/.ruby-version
           bundler-cache: true
+          working-directory: backend
 
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
+      - name: Brakeman security scan
+        # bypass bin/brakeman because its wrapper passes --ensure-latest,
+        # which exits non-zero whenever the bundled brakeman isn't the
+        # absolute latest released gem. Use the bundled version directly.
+        run: bundle exec brakeman --no-pager
 
   lint:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,10 +42,11 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: backend/.ruby-version
+          ruby-version-file: backend/.ruby-version
           bundler-cache: true
+          working-directory: backend
 
-      - name: Lint code for consistent style
+      - name: Rubocop
         run: bin/rubocop -f github
 
   test:
@@ -51,44 +57,35 @@ jobs:
 
     services:
       postgres:
-        image: postgres
+        image: postgres:16-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: socki
+          POSTGRES_PASSWORD: socki
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
-
-      # redis:
-      #   image: redis
-      #   ports:
-      #     - 6379:6379
-      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd="pg_isready -U socki" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 postgresql-client
-
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: backend/.ruby-version
+          ruby-version-file: backend/.ruby-version
           bundler-cache: true
+          working-directory: backend
 
-      - name: Run tests
+      - name: Set up test database
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test test:system
+          DATABASE_HOST: localhost
+        run: |
+          bin/rails db:create
+          bin/rails db:schema:load
 
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/backend/tmp/screenshots
-          if-no-files-found: ignore
+      - name: Run RSpec
+        env:
+          RAILS_ENV: test
+          DATABASE_HOST: localhost
+        run: bundle exec rspec

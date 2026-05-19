@@ -1,5 +1,12 @@
 puts "🌱 Seeding database..."
 
+# === Admin user ===
+User.find_or_create_by!(email: "admin@socki.app") do |u|
+  u.password = "password123"
+  u.is_admin = true
+end
+puts "  ✅ Admin user: admin@socki.app / password123"
+
 # === Disciplines ===
 kendo = Discipline.find_or_create_by!(name: "Kendo")
 

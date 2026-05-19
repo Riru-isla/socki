@@ -41,6 +41,10 @@ module Socki
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Enable sessions/cookies for Devise auth (frontend runs on same domain via proxy)
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: "_socki_session"
+
     config.generators do |g|
       g.test_framework :rspec
       g.fixture_replacement :factory_bot, dir: "spec/factories"

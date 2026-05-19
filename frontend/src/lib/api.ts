@@ -121,3 +121,15 @@ export async function createCompetitor(payload: {
 export async function deleteCompetitor(id: number) {
   await api.delete(`/competitors/${id}`);
 }
+
+export async function createEnrolment(categoryId: number, payload: {
+  competitor_id: number;
+  seed?: number | null;
+}) {
+  const { data } = await api.post(`/categories/${categoryId}/enrolments`, { enrolment: payload });
+  return data;
+}
+
+export async function deleteEnrolment(id: number) {
+  await api.delete(`/enrolments/${id}`);
+}

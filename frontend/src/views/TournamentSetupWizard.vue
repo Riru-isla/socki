@@ -9,6 +9,8 @@ import {
   fetchCompetitors,
   createCompetitor,
   deleteCompetitor,
+  createEnrolment,
+  deleteEnrolment,
 } from "../lib/api";
 
 const route = useRoute();
@@ -49,6 +51,9 @@ const newCompetitorProvince = ref("");
 const addingCompetitor = ref(false);
 const competitorError = ref<string | null>(null);
 
+// step 3 — enrolment errors (toggle ops are fire-and-reload)
+const enrolmentError = ref<string | null>(null);
+
 const step1Complete = computed(() => {
   const cats = tournament.value?.categories ?? [];
   return cats.length > 0 && cats.every((c: any) => c.shiajos.length > 0);
@@ -59,10 +64,18 @@ const step1Complete = computed(() => {
 // check, not per-tournament.
 const step2Complete = computed(() => competitors.value.length >= 2);
 
+// Step 3 is complete when at least one category has ≥2 enrolments —
+// that's the minimum required to form a match in step 4.
+const step3Complete = computed(() => {
+  const cats = tournament.value?.categories ?? [];
+  return cats.some((c: any) => c.enrolments.length >= 2);
+});
+
 onMounted(async () => {
   await load();
   // Resume on the first incomplete step.
-  if (step1Complete.value && step2Complete.value) currentStep.value = 3;
+  if (step1Complete.value && step2Complete.value && step3Complete.value) currentStep.value = 4;
+  else if (step1Complete.value && step2Complete.value) currentStep.value = 3;
   else if (step1Complete.value) currentStep.value = 2;
 });
 
@@ -161,6 +174,24 @@ async function removeCompetitor(id: number) {
   }
 }
 
+function enrolmentFor(category: any, competitorId: number) {
+  return category.enrolments.find((e: any) => e.competitor.id === competitorId) || null;
+}
+
+async function toggleEnrolment(categoryId: number, competitorId: number, existing: { id: number } | null) {
+  enrolmentError.value = null;
+  try {
+    if (existing) {
+      await deleteEnrolment(existing.id);
+    } else {
+      await createEnrolment(categoryId, { competitor_id: competitorId });
+    }
+    await load();
+  } catch (e: any) {
+    enrolmentError.value = e.response?.data?.errors?.join(", ") || e.response?.data?.error || "Failed to update enrolment";
+  }
+}
+
 function goToStep(step: Step) {
   currentStep.value = step;
 }
@@ -179,6 +210,7 @@ function finish() {
 
 const canAdvanceFromStep1 = computed(() => step1Complete.value);
 const canAdvanceFromStep2 = computed(() => step2Complete.value);
+const canAdvanceFromStep3 = computed(() => step3Complete.value);
 </script>
 
 <template>
@@ -316,10 +348,49 @@ const canAdvanceFromStep2 = computed(() => step2Complete.value);
           No competitors yet. Add the first one above.
         </div>
       </div>
-      <div v-if="currentStep === 3" style="border: 1px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; color: #6b7280">
-        <div style="font-size: 32px; margin-bottom: 8px">📝</div>
-        <div style="font-weight: 600; margin-bottom: 4px">Enrolments</div>
-        <div style="font-size: 13px">Coming in the next chunk: assign competitors to each category.</div>
+      <!-- step 3: Enrolments per category -->
+      <div v-if="currentStep === 3">
+        <div style="color: #6b7280; font-size: 13px; margin-bottom: 16px">
+          Tick each competitor to enrol them in a category. The same competitor can be in multiple categories (e.g. Individual + Team).
+        </div>
+
+        <div v-if="enrolmentError" style="color: #dc2626; background: #fef2f2; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px">⚠️ {{ enrolmentError }}</div>
+
+        <div v-if="!competitors.length" style="color: #9ca3af; text-align: center; padding: 40px 0">
+          No competitors in the pool yet — go back to step 2 and add some.
+        </div>
+
+        <div v-else style="display: grid; gap: 16px">
+          <div v-for="cat in tournament.categories" :key="cat.id" style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: white">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px">
+              <div>
+                <div style="font-weight: 700; font-size: 16px">{{ cat.name }}</div>
+                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-top: 2px">{{ cat.category_type.name }} · {{ cat.category_type.gender }}</div>
+              </div>
+              <div style="font-size: 12px; color: #6b7280; font-weight: 600">
+                {{ cat.enrolments.length }} / {{ competitors.length }} enrolled
+              </div>
+            </div>
+
+            <div style="display: grid; gap: 4px">
+              <label
+                v-for="c in competitors"
+                :key="c.id"
+                style="display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: pointer"
+                :style="{ background: enrolmentFor(cat, c.id) ? '#f0fdf4' : 'transparent' }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="!!enrolmentFor(cat, c.id)"
+                  @change="toggleEnrolment(cat.id, c.id, enrolmentFor(cat, c.id))"
+                  style="cursor: pointer"
+                />
+                <span style="font-weight: 500">{{ c.name }}</span>
+                <span v-if="c.province" style="font-size: 12px; color: #6b7280">· {{ c.province }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
       <div v-if="currentStep === 4" style="border: 1px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; color: #6b7280">
         <div style="font-size: 32px; margin-bottom: 8px">⚔️</div>
@@ -339,6 +410,9 @@ const canAdvanceFromStep2 = computed(() => step2Complete.value);
           </button>
           <button v-else-if="currentStep === 2 && !canAdvanceFromStep2" disabled style="padding: 10px 18px; font-size: 14px; background: #e5e7eb; color: #9ca3af; border: none; border-radius: 8px; cursor: not-allowed">
             Add at least 2 competitors to continue
+          </button>
+          <button v-else-if="currentStep === 3 && !canAdvanceFromStep3" disabled style="padding: 10px 18px; font-size: 14px; background: #e5e7eb; color: #9ca3af; border: none; border-radius: 8px; cursor: not-allowed">
+            Enrol at least 2 competitors in one category
           </button>
           <button v-else-if="currentStep < 4" @click="next" style="padding: 10px 18px; font-size: 14px; font-weight: 600; background: #171717; color: white; border: none; border-radius: 8px; cursor: pointer">
             Next →

@@ -11,6 +11,8 @@ import {
   deleteCompetitor,
   createEnrolment,
   deleteEnrolment,
+  fetchRuleSets,
+  createMatch,
 } from "../lib/api";
 
 const route = useRoute();
@@ -54,6 +56,16 @@ const competitorError = ref<string | null>(null);
 // step 3 — enrolment errors (toggle ops are fire-and-reload)
 const enrolmentError = ref<string | null>(null);
 
+// step 4 — add match form (one active category at a time)
+const ruleSets = ref<any[]>([]);
+const activeMatchCategoryId = ref<number | null>(null);
+const newMatchRedId = ref<number | null>(null);
+const newMatchWhiteId = ref<number | null>(null);
+const newMatchShiajoId = ref<number | null>(null);
+const newMatchRuleSetId = ref<number | null>(null);
+const addingMatch = ref(false);
+const matchError = ref<string | null>(null);
+
 const step1Complete = computed(() => {
   const cats = tournament.value?.categories ?? [];
   return cats.length > 0 && cats.every((c: any) => c.shiajos.length > 0);
@@ -81,16 +93,21 @@ onMounted(async () => {
 
 async function load() {
   try {
-    const [t, types, comps] = await Promise.all([
+    const [t, types, comps, rs] = await Promise.all([
       fetchTournament(tournamentId),
       fetchCategoryTypes(),
       fetchCompetitors(),
+      fetchRuleSets(),
     ]);
     tournament.value = t;
     categoryTypes.value = types;
     competitors.value = comps;
+    ruleSets.value = rs;
     if (types.length && newCategoryTypeId.value === null) {
       newCategoryTypeId.value = types[0].id;
+    }
+    if (rs.length && newMatchRuleSetId.value === null) {
+      newMatchRuleSetId.value = rs[0].id;
     }
   } catch (e: any) {
     error.value = e.response?.data?.error || "Failed to load championship";
@@ -189,6 +206,59 @@ async function toggleEnrolment(categoryId: number, competitorId: number, existin
     await load();
   } catch (e: any) {
     enrolmentError.value = e.response?.data?.errors?.join(", ") || e.response?.data?.error || "Failed to update enrolment";
+  }
+}
+
+function openMatchForm(category: any) {
+  activeMatchCategoryId.value = category.id;
+  matchError.value = null;
+  newMatchRedId.value = null;
+  newMatchWhiteId.value = null;
+  newMatchShiajoId.value = category.shiajos[0]?.id ?? null;
+  if (ruleSets.value.length && newMatchRuleSetId.value === null) {
+    newMatchRuleSetId.value = ruleSets.value[0].id;
+  }
+}
+
+function closeMatchForm() {
+  activeMatchCategoryId.value = null;
+  matchError.value = null;
+}
+
+async function addMatch(categoryId: number) {
+  matchError.value = null;
+  if (!newMatchRedId.value || !newMatchWhiteId.value) {
+    matchError.value = "Pick both red and white competitors";
+    return;
+  }
+  if (newMatchRedId.value === newMatchWhiteId.value) {
+    matchError.value = "Red and white must be different competitors";
+    return;
+  }
+  if (!newMatchShiajoId.value) {
+    matchError.value = "Pick a shiajo";
+    return;
+  }
+  if (!newMatchRuleSetId.value) {
+    matchError.value = "Pick a rule set";
+    return;
+  }
+  addingMatch.value = true;
+  try {
+    await createMatch(categoryId, {
+      shiajo_id: newMatchShiajoId.value,
+      red_competitor_id: newMatchRedId.value,
+      white_competitor_id: newMatchWhiteId.value,
+      rule_set_id: newMatchRuleSetId.value,
+    });
+    await load();
+    // keep form open for fast next-match entry, but clear competitors
+    newMatchRedId.value = null;
+    newMatchWhiteId.value = null;
+  } catch (e: any) {
+    matchError.value = e.response?.data?.errors?.join(", ") || e.response?.data?.error || "Failed to create match";
+  } finally {
+    addingMatch.value = false;
   }
 }
 
@@ -392,10 +462,94 @@ const canAdvanceFromStep3 = computed(() => step3Complete.value);
           </div>
         </div>
       </div>
-      <div v-if="currentStep === 4" style="border: 1px dashed #d1d5db; border-radius: 12px; padding: 48px; text-align: center; color: #6b7280">
-        <div style="font-size: 32px; margin-bottom: 8px">⚔️</div>
-        <div style="font-weight: 600; margin-bottom: 4px">Matches</div>
-        <div style="font-size: 13px">Coming in the next chunk: create matches between enrolled competitors. Later, the draw button lives here.</div>
+      <!-- step 4: Matches -->
+      <div v-if="currentStep === 4">
+        <div style="color: #6b7280; font-size: 13px; margin-bottom: 16px">
+          Create matches by picking red and white from enrolled competitors. Each match also needs a shiajo and a rule set. Once a match exists, you can run it from the mesa view.
+        </div>
+
+        <div v-if="matchError" style="color: #dc2626; background: #fef2f2; padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 13px">⚠️ {{ matchError }}</div>
+
+        <div style="display: grid; gap: 16px">
+          <div v-for="cat in tournament.categories" :key="cat.id" style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; background: white">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px">
+              <div>
+                <div style="font-weight: 700; font-size: 16px">{{ cat.name }}</div>
+                <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-top: 2px">{{ cat.enrolments.length }} enrolled · {{ cat.matches.length }} matches</div>
+              </div>
+            </div>
+
+            <!-- existing matches -->
+            <div v-if="cat.matches.length" style="display: grid; gap: 8px; margin-bottom: 12px">
+              <div v-for="m in cat.matches" :key="m.id" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa">
+                <span style="font-size: 12px; color: #6b7280; font-weight: 600; font-variant-numeric: tabular-nums">#{{ m.position }}</span>
+                <span style="font-weight: 600">{{ m.red_competitor?.name || "TBD" }}</span>
+                <span style="color: #9ca3af">vs</span>
+                <span style="font-weight: 600">{{ m.white_competitor?.name || "TBD" }}</span>
+                <span style="font-size: 12px; color: #6b7280">· {{ m.shiajo.name }}</span>
+                <span :style="{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  padding: '2px 8px',
+                  borderRadius: '999px',
+                  background: m.status === 'in_progress' ? '#fef3c7' : m.status === 'finished' ? '#dcfce7' : '#e5e7eb',
+                  color: m.status === 'in_progress' ? '#92400e' : m.status === 'finished' ? '#166534' : '#374151',
+                }">{{ m.status }}</span>
+                <span style="flex: 1"></span>
+                <router-link :to="`/mesa/${m.id}`" style="font-size: 13px; padding: 4px 10px; border-radius: 6px; background: #171717; color: white; text-decoration: none; font-weight: 600">▶ Mesa</router-link>
+                <router-link :to="`/projector/${m.id}`" style="font-size: 13px; padding: 4px 10px; border-radius: 6px; background: #f3f4f6; color: #374151; text-decoration: none; font-weight: 600">👁 Projector</router-link>
+              </div>
+            </div>
+
+            <!-- add match form -->
+            <template v-if="cat.enrolments.length >= 2 && cat.shiajos.length">
+              <div v-if="activeMatchCategoryId === cat.id" style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; display: grid; gap: 10px">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">Red</label>
+                    <select v-model="newMatchRedId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option :value="null" disabled>Pick competitor…</option>
+                      <option v-for="e in cat.enrolments" :key="e.id" :value="e.competitor.id" :disabled="e.competitor.id === newMatchWhiteId">{{ e.competitor.name }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">White</label>
+                    <select v-model="newMatchWhiteId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option :value="null" disabled>Pick competitor…</option>
+                      <option v-for="e in cat.enrolments" :key="e.id" :value="e.competitor.id" :disabled="e.competitor.id === newMatchRedId">{{ e.competitor.name }}</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">Shiajo</label>
+                    <select v-model="newMatchShiajoId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option v-for="s in cat.shiajos" :key="s.id" :value="s.id">{{ s.name }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">Rule set</label>
+                    <select v-model="newMatchRuleSetId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option v-for="rs in ruleSets" :key="rs.id" :value="rs.id">{{ rs.name }} ({{ rs.max_time }}s · best-of-{{ rs.best_of_points }})</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px; justify-content: flex-end">
+                  <button @click="closeMatchForm" style="padding: 8px 14px; font-size: 13px; border: 1px solid #d1d5db; background: white; border-radius: 6px; cursor: pointer">Done</button>
+                  <button @click="addMatch(cat.id)" :disabled="addingMatch" style="padding: 8px 14px; font-size: 13px; font-weight: 600; background: #171717; color: white; border: none; border-radius: 6px; cursor: pointer">
+                    {{ addingMatch ? "Adding…" : "Add Match" }}
+                  </button>
+                </div>
+              </div>
+              <button v-else @click="openMatchForm(cat)" style="padding: 8px 14px; font-size: 13px; font-weight: 600; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; color: #374151">+ Add Match</button>
+            </template>
+            <div v-else style="font-size: 12px; color: #9ca3af; padding: 6px 0">
+              <span v-if="cat.enrolments.length < 2">Need at least 2 enrolments — go back to step 3.</span>
+              <span v-else>Need at least 1 shiajo — go back to step 1.</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- footer nav -->

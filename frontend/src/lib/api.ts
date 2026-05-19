@@ -133,3 +133,18 @@ export async function createEnrolment(categoryId: number, payload: {
 export async function deleteEnrolment(id: number) {
   await api.delete(`/enrolments/${id}`);
 }
+
+export async function fetchRuleSets() {
+  const { data } = await api.get("/rule_sets");
+  return data;
+}
+
+export async function createMatch(categoryId: number, payload: {
+  shiajo_id: number;
+  red_competitor_id: number;
+  white_competitor_id: number;
+  rule_set_id: number;
+}) {
+  const { data } = await api.post(`/categories/${categoryId}/matches`, { match: payload });
+  return data;
+}

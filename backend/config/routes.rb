@@ -33,6 +33,7 @@ Rails.application.routes.draw do
       resources :category_types, only: [ :index, :create ]
       resources :seasons, only: [ :index, :create ]
       resources :disciplines, only: [ :index ]
+      resources :competitors, only: [ :index, :create, :destroy ]
     end
   end
 end

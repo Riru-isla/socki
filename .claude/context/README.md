@@ -12,9 +12,9 @@ Convention: ✅ = working today, ⚠️ = code exists but broken / not wired, �
 | [`backend/domain-model.md`](backend/domain-model.md)   | Schema, associations, what each table represents |
 | [`backend/live-scoring.md`](backend/live-scoring.md)   | ✅ Posting match events, MatchChannel, MatchSerializer |
 | [`backend/crud-resources.md`](backend/crud-resources.md) | ✅ Tournament / category / shiajo / season / etc. CRUD |
-| [`backend/auth-devise.md`](backend/auth-devise.md)     | ✅ Devise setup, admin endpoints, `authenticate_admin!` |
+| [`backend/auth-devise.md`](backend/auth-devise.md)     | ✅ Devise setup, admin endpoints, `authenticate_admin!` (currently stubbed) |
 | [`backend/action-cable.md`](backend/action-cable.md)   | ActionCable channels overview + the open auth gap |
-| [`backend/shiajo-projector.md`](backend/shiajo-projector.md) | ⚠️ Shiajo projector / summary — routed but currently crashes |
+| [`backend/shiajo-projector.md`](backend/shiajo-projector.md) | ✅ Shiajo projector / summary endpoints (HTTP works; push not wired) |
 
 ## Frontend (`frontend/`)
 
@@ -23,7 +23,8 @@ Convention: ✅ = working today, ⚠️ = code exists but broken / not wired, �
 | [`frontend/overview.md`](frontend/overview.md)     | Any frontend work — stack, dirs, router, proxy |
 | [`frontend/composables.md`](frontend/composables.md) | `useMatch`, `useShiajo`, the real-time pattern |
 | [`frontend/api-client.md`](frontend/api-client.md) | `lib/api.ts` and `lib/cable.ts` — HTTP + WebSocket helpers |
-| [`frontend/views.md`](frontend/views.md)           | The 9 views and what each one does |
+| [`frontend/views.md`](frontend/views.md)           | The 10 views and what each one does |
+| [`frontend/wizard.md`](frontend/wizard.md)         | ✅ Championship setup wizard — the main user surface for setup |
 
 ## Future / planned (`future/`)
 

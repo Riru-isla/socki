@@ -1,4 +1,8 @@
-# Auth (Devise) ✅
+# Auth (Devise) ✅ wired, ⚠️ enforcement currently stubbed
+
+**Current state:** Devise is fully set up — User model, routes, seeded admin, `authenticate_admin!` helper. Every admin-mutating controller declares its `before_action :authenticate_admin!`. **But the method itself is currently a no-op** (single TODO marker in `ApplicationController`) because the frontend has no login UI yet. Flipping enforcement back on is a one-line change once login lands.
+
+Search for `TODO(auth-restore)` to find the toggle.
 
 ## Setup
 
@@ -39,29 +43,33 @@ class Api::V1::TournamentsController < ApplicationController
 end
 ```
 
-`authenticate_admin!` is defined in `ApplicationController`:
+`authenticate_admin!` is defined in `ApplicationController`. The intended body is currently commented out (look for `TODO(auth-restore)`); the live method is a no-op:
 
 ```ruby
 def authenticate_admin!
-  unless user_signed_in? && current_user.is_admin?
-    render json: { error: "Forbidden" }, status: :forbidden
-  end
+  # TODO(auth-restore): when login UI lands, uncomment:
+  # unless user_signed_in? && current_user.is_admin?
+  #   render json: { error: "Forbidden" }, status: :forbidden
+  # end
 end
 ```
 
-Returns **403** on failure, not 401. If you want a 401 for "not signed in" and 403 only for "signed in but not admin", split the check.
+When restored, it returns **403** on failure (not 401). If you want a 401 for "not signed in" and 403 only for "signed in but not admin", split the check at that time.
 
-## Where it's actually applied today
+## Where it's declared (gate definitions, currently no-op)
 
-| Controller             | `authenticate_admin!` on |
-| ---------------------- | ------------------------ |
-| `TournamentsController` | `:create` |
-| `CategoriesController`  | **all actions** |
-| `SeasonsController`     | `:create` |
-| `CategoryTypesController` | `:create` |
-| `ShiajosController`     | `:create` |
+| Controller                | `authenticate_admin!` on        |
+| ------------------------- | ------------------------------- |
+| `TournamentsController`   | `:create`                       |
+| `CategoriesController`    | **all actions**                 |
+| `SeasonsController`       | `:create`                       |
+| `CategoryTypesController` | `:create`                       |
+| `ShiajosController`       | `:create`                       |
+| `CompetitorsController`   | `:create`, `:destroy`           |
+| `EnrolmentsController`    | `:create`, `:destroy`           |
+| `MatchesController`       | `:create`                       |
 
-`MatchEventsController`, `MatchesController#show`, `Shiajos#projector`/`#summary`, `Disciplines#index` are **not gated** — anonymous clients can post score events and read matches. This is acceptable for the LAN-only tournament use case but must be revisited before any public deployment.
+Not gated (intentional): `MatchEventsController`, `MatchesController#show`, `Shiajos#projector`/`#summary`, `Disciplines#index`, `RuleSetsController#index`. These read endpoints are public; score events specifically are unauthenticated so a tablet mesa doesn't need login.
 
 ## The ActionCable gap
 

@@ -1,6 +1,6 @@
 # Views
 
-Nine views in `frontend/src/views/`. Two patterns: **plain HTTP** (load on mount, render) and **real-time** (composable-driven).
+Ten views in `frontend/src/views/`. Two patterns: **plain HTTP** (load on mount, render) and **real-time** (composable-driven). The setup wizard is the main user surface — see `wizard.md` for its details.
 
 ## Real-time
 
@@ -26,15 +26,21 @@ Loads correctly from the HTTP endpoint. Real-time push isn't wired yet — see `
 
 ### `TournamentsView.vue` — `/tournaments`
 
-Index. `fetchTournaments()` on mount, list with click-through to `/tournaments/:id`. "New Championship" button → `/tournaments/new`.
+Index. `fetchTournaments()` on mount, list with click-through. **Clicking a championship now routes to `/tournaments/:id/setup`** (the wizard), not to `/tournaments/:id` — the wizard auto-resumes on whichever step is incomplete. "New Championship" button → `/tournaments/new`.
 
 ### `TournamentNewView.vue` — `/tournaments/new`
 
-Form. Needs a season + at least one category type seeded. POSTs via `createTournament`. Admin-only on the backend — frontend has no login UI yet, so this **will 403 in production** until auth is wired through (today it works because there's no enforced login in dev workflows).
+Form for the championship basics (title, region, dates, season, type, official?). Needs a season + at least one category type seeded. POSTs via `createTournament` then redirects to `/tournaments/:id/setup`.
+
+Admin-only on the backend — currently no-op'd until login UI lands, so it works without auth.
+
+### `TournamentSetupWizard.vue` — `/tournaments/:id/setup`
+
+The main setup flow. Four steps (Categories & Shiajos / Competitors / Enrolments / Matches) with step indicator, advance gates, and resume logic. See `wizard.md`.
 
 ### `TournamentDetailView.vue` — `/tournaments/:id`
 
-Single tournament view. Lists categories and shiajos under it. Probably the place to add the "draw" UI when #12 lands.
+The "post-setup management" view. Reached via the wizard's Finish button (and the only way to reach it now, since the index routes to /setup). Currently still has the older "add category + add shiajo" inline forms — overlaps with step 1 of the wizard. Worth simplifying into a read-only "championship dashboard" once the wizard becomes the single source of truth for setup.
 
 ### `SeasonsView.vue` — `/seasons`
 

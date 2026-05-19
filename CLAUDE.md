@@ -31,11 +31,17 @@ Bare-metal alternative: `cd backend && bin/rails server` + `cd frontend && npm r
 
 ## Working with this codebase
 
-- `backend/` is a Rails API-only app. CRUD is split across `Api::V1::*Controller`s; admin-mutating actions are gated by `before_action :authenticate_admin!`.
+- `backend/` is a Rails API-only app. CRUD is split across `Api::V1::*Controller`s. Admin-mutating actions declare `before_action :authenticate_admin!` — **the method is currently stubbed to no-op** until the frontend login UI lands (single switch in `ApplicationController`).
 - `frontend/` uses Vue's composition API. Reusable real-time logic lives in `frontend/src/composables/` (`useMatch`, `useShiajo`).
 - ActionCable streams from `match_{id}` and `shiajo_{id}` / `projector_shiajo_{id}`. The frontend subscribes via helpers in `frontend/src/lib/cable.ts`.
+- The main setup UI is the championship wizard at `/tournaments/:id/setup`: categories+shiajos → competitors → enrolments → matches (including bracket source-matches). See `.claude/context/frontend/wizard.md`.
 - Tests: `cd backend && bundle exec rspec`. Frontend has no tests yet.
 
 ## Verifying claims
 
-Older docs (`.kimi/`, parts of GitHub issues) describe architecture that doesn't exist yet — most notably bracket FKs (`red_source_match_id`, `white_source_match_id`) and a winner-propagation callback. **Verify against `backend/db/schema.rb` and `backend/config/routes.rb` before treating any architecture statement as real.**
+The codebase has grown via several AI-assisted sessions, and docs sometimes drift from reality. **Before treating any architecture statement as fact**, verify against the actual source — schema.rb / routes.rb / the model file. Things to be especially skeptical about:
+
+- "We use X gem" — check `backend/Gemfile` (e.g. `rack-cors` is referenced in docs as needed but still commented out).
+- "Endpoint Y exists" — check `backend/config/routes.rb` first.
+- "Field Z is on Model" — check `backend/db/schema.rb` (not the model file alone; an association can be declared on a missing column).
+- Anything in `.claude/context/future/` — those are *intent*, not current code.

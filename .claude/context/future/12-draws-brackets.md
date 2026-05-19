@@ -1,4 +1,4 @@
-# #12 — Draw & bracket system 🔮
+# #12 — Draw & bracket system 🔄 partial
 
 **GitHub:** https://github.com/Riru-isla/socki/issues/12
 
@@ -16,22 +16,24 @@ Generate and manage single-elimination brackets for a category. Given a pool of 
 
 ## Current state
 
-Schema scaffolding is in place. **Generation logic, callbacks, and UI are not.**
+Most of the scaffolding is now done. Brackets can be **built manually** in the wizard and the auto-fill on winner works. What remains is the **automatic generator** and the **winner-setting affordance**.
 
-Already done (migrations `20260512142144` + `20260513071459`):
+### Already built
 
-- `matches.red_source_match_id`, `matches.white_source_match_id` columns + FKs (`on_delete: :nullify`) + indexes.
-- `matches.red_competitor_id` / `white_competitor_id` relaxed to nullable, with FKs (`on_delete: :nullify`). A pre-draw match can exist without competitors.
-- `Match` model has `belongs_to :red_source_match` / `:white_source_match` and inverse `has_one :red_feeds_into_match` / `:white_feeds_into_match`.
+- ✅ `matches.red_source_match_id` / `white_source_match_id` columns + FKs (`on_delete: :nullify`) + indexes (migration `20260513071459`).
+- ✅ Nullable `red_competitor_id` / `white_competitor_id` so a match can exist before its competitors are decided (migration `20260512142144`).
+- ✅ `Match` model has `belongs_to :red_source_match` / `:white_source_match` and inverse `has_one :red_feeds_into_match` / `:white_feeds_into_match`.
+- ✅ `Enrolment` model (Competitor ↔ Category) — the pool feeder for the eventual generator.
+- ✅ **Winner-propagation callback** `Match#propagate_winner_to_downstream_matches` (`after_update if: :saved_change_to_winner_id?`). When `winner_id` is set, the corresponding side of any downstream match is filled. 4 specs cover it.
+- ✅ **Manual bracket creation** in wizard step 4: each side of a new match can be either a competitor or "winner of match #N".
 
-Still to build (this issue's scope):
+### Still to build
 
-- Pool seeding generator.
-- Single-elim bracket auto-population (create matches with `red_source_match` / `white_source_match` references).
-- Winner-propagation callback: when `Match#winner_id` is set, fill in the downstream `red_competitor` / `white_competitor` on whichever match has `red_source_match_id == self.id` (or white).
-- Bye handling.
-- Manual draw override UI (drag-and-drop).
-- Repechage bracket.
+- ❌ **Match finish endpoint** — there's no API or UI today to *set* `winner_id`. The propagation callback fires on update, but only the Rails console can trigger it. Most natural next step: `PATCH /api/v1/matches/:id` + a "Finish match" button in `MesaView`.
+- ❌ Pool seeding generator (the "auto-draw" button).
+- ❌ Bye handling for odd-N pools.
+- ❌ Manual draw override UI (drag-and-drop).
+- ❌ Repechage bracket.
 
 ## What changes
 
@@ -45,16 +47,17 @@ Possibly `matches.bracket_position` (round + slot encoding TBD) if the existing 
 - Probably new model `Enrolment` joining `Competitor` to `Category` — the pool that gets seeded. Competitor today has no link to a category.
 - Match callback: when `winner_id` is set, find every match where `red_source_match_id == self.id` and set its `red_competitor_id = self.winner_id` (same for white side).
 
-### API surface
+### API surface (still to add)
 
-- `POST /api/v1/categories/:id/draws` — generate.
+- `PATCH /api/v1/matches/:id` — set `winner_id` / `status` (closes the bracket loop end-to-end).
+- `POST /api/v1/categories/:id/draws` (or `/auto_draw`) — generate.
 - `PATCH /api/v1/draws/:id` — manual override (swap slots).
-- `GET /api/v1/categories/:id/draws/:id` — bracket payload.
 
-### Frontend
+### Frontend (still to add)
 
-- New `BracketView.vue` (drag-and-drop seeding).
-- Bracket display component reusable in `TournamentDetailView`.
+- "Finish match" affordance in `MesaView`.
+- "Auto-draw" button in wizard step 4 (or a dedicated bracket view).
+- Bracket visualisation (currently matches are shown as a flat list per category).
 
 ## Considerations
 

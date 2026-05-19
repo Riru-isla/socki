@@ -32,6 +32,15 @@ Vite proxies `/api/*` → Rails (`:3000` locally; `API_PROXY_TARGET` env in Dock
 | `fetchCategoryTypes()`         | GET    | `/category_types`                          | — |
 | `createCategoryType(p)`        | POST   | `/category_types`                          | `{ category_type: p }` — admin only |
 | `fetchDisciplines()`           | GET    | `/disciplines`                             | — |
+| `fetchCompetitors()`           | GET    | `/competitors`                             | — |
+| `createCompetitor(p)`          | POST   | `/competitors`                             | `{ competitor: p }` — admin only. `p = { name, age?, province? }`. |
+| `deleteCompetitor(id)`         | DELETE | `/competitors/:id`                         | admin only |
+| `createEnrolment(catId, p)`    | POST   | `/categories/:catId/enrolments`            | `{ enrolment: p }` — admin only. `p = { competitor_id, seed? }`. |
+| `deleteEnrolment(id)`          | DELETE | `/enrolments/:id`                          | admin only |
+| `fetchRuleSets()`              | GET    | `/rule_sets`                               | — |
+| `createMatch(catId, p)`        | POST   | `/categories/:catId/matches`               | `{ match: p }` — admin only. `p = { shiajo_id, rule_set_id, red_competitor_id?, white_competitor_id?, red_source_match_id?, white_source_match_id? }`. Each side is either a competitor or a source-match (never both). |
+
+**Note on "admin only"**: declared, but currently a no-op until the frontend login UI lands. See `backend/auth-devise.md`.
 
 ### Adding a new helper
 

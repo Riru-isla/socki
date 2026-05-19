@@ -1,10 +1,11 @@
 module Api
   module V1
     class ShiajosController < ApplicationController
+      before_action :authenticate_admin!, only: [ :create ]
 
       def projector
         shiajo = Shiajo.find(params[:id])
-        result = Shiajos::ProjectorPayload.new(shiajo).call # no hint on GET
+        result = Shiajos::ProjectorPayload.new(shiajo).call
         render json: ProjectorSerializer.new(result).as_json
       end
 
@@ -24,7 +25,21 @@ module Api
         }
       end
 
+      def create
+        category = Category.find(params[:category_id])
+        shiajo = category.shiajos.new(shiajo_params)
+        if shiajo.save
+          render json: { id: shiajo.id, name: shiajo.name, active: shiajo.active }, status: :created
+        else
+          render json: { errors: shiajo.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
       private
+
+      def shiajo_params
+        params.require(:shiajo).permit(:name, :position)
+      end
 
       def recent?(match)
         match.updated_at >= 10.minutes.ago

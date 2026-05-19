@@ -8,8 +8,19 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
 
+  devise_for :users, path: "api/v1/auth", controllers: {
+    sessions: "api/v1/users/sessions",
+    registrations: "api/v1/users/registrations"
+  }
+
   namespace :api do
     namespace :v1 do
+      resources :tournaments, only: [ :index, :show, :create ] do
+        resources :categories, only: [ :create ]
+      end
+      resources :categories, only: [] do
+        resources :shiajos, only: [ :create ]
+      end
       resources :matches, only: [ :show ] do
         resources :match_events, only: [ :create ]
       end
@@ -19,6 +30,9 @@ Rails.application.routes.draw do
           get :summary
         end
       end
+      resources :category_types, only: [ :index, :create ]
+      resources :seasons, only: [ :index, :create ]
+      resources :disciplines, only: [ :index ]
     end
   end
 end

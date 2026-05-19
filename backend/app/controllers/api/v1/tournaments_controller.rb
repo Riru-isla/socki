@@ -9,7 +9,9 @@ module Api
       end
 
       def show
-        tournament = Tournament.includes(categories: :shiajos).find(params[:id])
+        tournament = Tournament.includes(
+          categories: [ :shiajos, { enrolments: :competitor } ]
+        ).find(params[:id])
         render json: tournament_detail_payload(tournament)
       end
 
@@ -62,7 +64,21 @@ module Api
           name: c.name,
           category_type: { id: c.category_type.id, name: c.category_type.name, gender: c.category_type.gender },
           shiajo_count: c.shiajos.count,
-          shiajos: c.shiajos.map { |s| { id: s.id, name: s.name, active: s.active } }
+          shiajos: c.shiajos.map { |s| { id: s.id, name: s.name, active: s.active } },
+          enrolments: c.enrolments.map { |e| enrolment_payload(e) }
+        }
+      end
+
+      def enrolment_payload(e)
+        {
+          id: e.id,
+          seed: e.seed,
+          competitor: {
+            id: e.competitor.id,
+            name: e.competitor.name,
+            age: e.competitor.age,
+            province: e.competitor.province
+          }
         }
       end
     end

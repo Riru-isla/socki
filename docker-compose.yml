@@ -31,7 +31,9 @@ services:
       dockerfile: Dockerfile.dev
     environment:
       RAILS_ENV: development
-      DATABASE_URL: postgres://socki:socki@postgres:5432/socki_development
+      # No DATABASE_URL — config/database.yml picks the per-env database
+      # name. DATABASE_HOST tells Rails where postgres lives.
+      DATABASE_HOST: postgres
       REDIS_URL: redis://redis:6379/1
       # RAILS_MASTER_KEY is read from config/master.key via volume mount
     volumes:

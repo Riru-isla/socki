@@ -1,6 +1,10 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
-ENV['RAILS_ENV'] ||= 'test'
+# Force RAILS_ENV=test for the spec run. ||= would leave the inherited
+# value alone, and docker-compose sets RAILS_ENV=development on the
+# backend container — which previously caused rspec to run against the
+# dev DB and trip uniqueness validations on seeded rows.
+ENV['RAILS_ENV'] = 'test'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort("The Rails environment is running in production mode!") if Rails.env.production?

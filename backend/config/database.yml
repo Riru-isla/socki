@@ -2,16 +2,14 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
-
-  # Docker Compose uses DATABASE_URL env var; fallback for local dev
-  <% if ENV["DATABASE_URL"] %>
-  url: <%= ENV["DATABASE_URL"] %>
-  <% else %>
   username: socki
   password: "<%= ENV.fetch('SOCKI_DATABASE_PASSWORD', 'socki') %>"
   host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
-  <% end %>
 
+# Each env has its own database. We deliberately do NOT read
+# DATABASE_URL in development/test — when it was inherited via the
+# default block, an exported DATABASE_URL aimed at socki_development
+# bled into rspec and broke fixtures.
 development:
   <<: *default
   database: socki_development
@@ -23,5 +21,7 @@ test:
 production:
   <<: *default
   database: socki_production
-  username: socki
   password: "<%= ENV['SOCKI_DATABASE_PASSWORD'] %>"
+  <% if ENV["DATABASE_URL"] %>
+  url: <%= ENV["DATABASE_URL"] %>
+  <% end %>

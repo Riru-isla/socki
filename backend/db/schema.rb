@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_18_161001) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_19_163423) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -47,6 +47,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_18_161001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_disciplines_on_name", unique: true
+  end
+
+  create_table "enrolments", force: :cascade do |t|
+    t.bigint "competitor_id", null: false
+    t.bigint "category_id", null: false
+    t.integer "seed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_enrolments_on_category_id"
+    t.index ["competitor_id", "category_id"], name: "index_enrolments_on_competitor_id_and_category_id", unique: true
+    t.index ["competitor_id"], name: "index_enrolments_on_competitor_id"
   end
 
   create_table "match_events", force: :cascade do |t|
@@ -154,6 +165,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_18_161001) do
 
   add_foreign_key "categories", "category_types"
   add_foreign_key "categories", "tournaments"
+  add_foreign_key "enrolments", "categories", on_delete: :cascade
+  add_foreign_key "enrolments", "competitors", on_delete: :cascade
   add_foreign_key "match_events", "competitors", on_delete: :nullify
   add_foreign_key "match_events", "matches"
   add_foreign_key "matches", "categories"

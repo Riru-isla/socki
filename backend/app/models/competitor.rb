@@ -3,6 +3,8 @@ class Competitor < ApplicationRecord
   has_many :matches_as_white, class_name: "Match", foreign_key: "white_competitor_id", dependent: :nullify
   has_many :wins, class_name: "Match", foreign_key: "winner_id", dependent: :nullify
   has_many :match_events, dependent: :nullify
+  has_many :enrolments, dependent: :destroy
+  has_many :categories, through: :enrolments
 
   validates :name, presence: true
 end

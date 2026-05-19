@@ -20,7 +20,9 @@ Rails.application.routes.draw do
       end
       resources :categories, only: [] do
         resources :shiajos, only: [ :create ]
+        resources :enrolments, only: [ :index, :create ]
       end
+      resources :enrolments, only: [ :destroy ]
       resources :matches, only: [ :show ] do
         resources :match_events, only: [ :create ]
       end

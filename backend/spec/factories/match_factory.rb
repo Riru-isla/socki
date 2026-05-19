@@ -8,6 +8,9 @@ FactoryBot.define do
     association :red_competitor,  factory: :competitor
     association :white_competitor, factory: :competitor
 
+    # position is null:false with a unique (shiajo_id, position) index
+    sequence(:position) { |n| n }
+
     # these will normally be set by callback, but we set defaults so validation passes
     max_time { 180 }
     best_of_points { 3 }

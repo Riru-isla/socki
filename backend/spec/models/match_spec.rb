@@ -11,7 +11,8 @@ RSpec.describe Match, type: :model do
       shiajo: shiajo,
       rule_set: rule_set,
       red_competitor: create(:competitor),
-      white_competitor: create(:competitor)
+      white_competitor: create(:competitor),
+      position: 1
     )
 
     expect(m.max_time).to eq(rule_set.max_time)
@@ -25,7 +26,8 @@ RSpec.describe Match, type: :model do
       shiajo: shiajo,
       rule_set: rule_set,
       red_competitor: create(:competitor),
-      white_competitor: create(:competitor)
+      white_competitor: create(:competitor),
+      position: 1
     )
 
     expect(m.status).to eq("upcoming")

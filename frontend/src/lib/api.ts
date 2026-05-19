@@ -141,9 +141,11 @@ export async function fetchRuleSets() {
 
 export async function createMatch(categoryId: number, payload: {
   shiajo_id: number;
-  red_competitor_id: number;
-  white_competitor_id: number;
   rule_set_id: number;
+  red_competitor_id?: number;
+  white_competitor_id?: number;
+  red_source_match_id?: number;
+  white_source_match_id?: number;
 }) {
   const { data } = await api.post(`/categories/${categoryId}/matches`, { match: payload });
   return data;

@@ -57,10 +57,13 @@ const competitorError = ref<string | null>(null);
 const enrolmentError = ref<string | null>(null);
 
 // step 4 — add match form (one active category at a time)
+// Red/white selectors encode their value as "competitor:5" or "match:3"
+// so a single dropdown can mix concrete competitors with "winner of
+// match X" placeholders.
 const ruleSets = ref<any[]>([]);
 const activeMatchCategoryId = ref<number | null>(null);
-const newMatchRedId = ref<number | null>(null);
-const newMatchWhiteId = ref<number | null>(null);
+const newMatchRedRef = ref<string | null>(null);
+const newMatchWhiteRef = ref<string | null>(null);
 const newMatchShiajoId = ref<number | null>(null);
 const newMatchRuleSetId = ref<number | null>(null);
 const addingMatch = ref(false);
@@ -212,8 +215,8 @@ async function toggleEnrolment(categoryId: number, competitorId: number, existin
 function openMatchForm(category: any) {
   activeMatchCategoryId.value = category.id;
   matchError.value = null;
-  newMatchRedId.value = null;
-  newMatchWhiteId.value = null;
+  newMatchRedRef.value = null;
+  newMatchWhiteRef.value = null;
   newMatchShiajoId.value = category.shiajos[0]?.id ?? null;
   if (ruleSets.value.length && newMatchRuleSetId.value === null) {
     newMatchRuleSetId.value = ruleSets.value[0].id;
@@ -225,14 +228,32 @@ function closeMatchForm() {
   matchError.value = null;
 }
 
+function parseMatchRef(ref: string | null): { kind: "competitor" | "match"; id: number } | null {
+  if (!ref) return null;
+  const [kind, idStr] = ref.split(":");
+  if (!idStr || (kind !== "competitor" && kind !== "match")) return null;
+  return { kind, id: parseInt(idStr, 10) };
+}
+
+function matchLabel(m: any): string {
+  const red = m.red_competitor?.name
+    || (m.red_source_match_id ? `winner of #${m.red_source_match_id}` : "TBD");
+  const white = m.white_competitor?.name
+    || (m.white_source_match_id ? `winner of #${m.white_source_match_id}` : "TBD");
+  return `${red} vs ${white}`;
+}
+
 async function addMatch(categoryId: number) {
   matchError.value = null;
-  if (!newMatchRedId.value || !newMatchWhiteId.value) {
-    matchError.value = "Pick both red and white competitors";
+  const red = parseMatchRef(newMatchRedRef.value);
+  const white = parseMatchRef(newMatchWhiteRef.value);
+
+  if (!red || !white) {
+    matchError.value = "Pick a source for both red and white";
     return;
   }
-  if (newMatchRedId.value === newMatchWhiteId.value) {
-    matchError.value = "Red and white must be different competitors";
+  if (red.kind === white.kind && red.id === white.id) {
+    matchError.value = "Red and white must be different";
     return;
   }
   if (!newMatchShiajoId.value) {
@@ -243,18 +264,23 @@ async function addMatch(categoryId: number) {
     matchError.value = "Pick a rule set";
     return;
   }
+
+  const payload: any = {
+    shiajo_id: newMatchShiajoId.value,
+    rule_set_id: newMatchRuleSetId.value,
+  };
+  if (red.kind === "competitor") payload.red_competitor_id = red.id;
+  else payload.red_source_match_id = red.id;
+  if (white.kind === "competitor") payload.white_competitor_id = white.id;
+  else payload.white_source_match_id = white.id;
+
   addingMatch.value = true;
   try {
-    await createMatch(categoryId, {
-      shiajo_id: newMatchShiajoId.value,
-      red_competitor_id: newMatchRedId.value,
-      white_competitor_id: newMatchWhiteId.value,
-      rule_set_id: newMatchRuleSetId.value,
-    });
+    await createMatch(categoryId, payload);
     await load();
-    // keep form open for fast next-match entry, but clear competitors
-    newMatchRedId.value = null;
-    newMatchWhiteId.value = null;
+    // keep form open for fast next-match entry, but clear pickers
+    newMatchRedRef.value = null;
+    newMatchWhiteRef.value = null;
   } catch (e: any) {
     matchError.value = e.response?.data?.errors?.join(", ") || e.response?.data?.error || "Failed to create match";
   } finally {
@@ -483,9 +509,13 @@ const canAdvanceFromStep3 = computed(() => step3Complete.value);
             <div v-if="cat.matches.length" style="display: grid; gap: 8px; margin-bottom: 12px">
               <div v-for="m in cat.matches" :key="m.id" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fafafa">
                 <span style="font-size: 12px; color: #6b7280; font-weight: 600; font-variant-numeric: tabular-nums">#{{ m.position }}</span>
-                <span style="font-weight: 600">{{ m.red_competitor?.name || "TBD" }}</span>
+                <span :style="{ fontWeight: 600, color: m.red_competitor ? '#171717' : '#9ca3af', fontStyle: m.red_competitor ? 'normal' : 'italic' }">
+                  {{ m.red_competitor?.name || (m.red_source_match_id ? `winner of #${m.red_source_match_id}` : "TBD") }}
+                </span>
                 <span style="color: #9ca3af">vs</span>
-                <span style="font-weight: 600">{{ m.white_competitor?.name || "TBD" }}</span>
+                <span :style="{ fontWeight: 600, color: m.white_competitor ? '#171717' : '#9ca3af', fontStyle: m.white_competitor ? 'normal' : 'italic' }">
+                  {{ m.white_competitor?.name || (m.white_source_match_id ? `winner of #${m.white_source_match_id}` : "TBD") }}
+                </span>
                 <span style="font-size: 12px; color: #6b7280">· {{ m.shiajo.name }}</span>
                 <span :style="{
                   fontSize: '11px',
@@ -508,16 +538,26 @@ const canAdvanceFromStep3 = computed(() => step3Complete.value);
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
                   <div>
                     <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">Red</label>
-                    <select v-model="newMatchRedId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
-                      <option :value="null" disabled>Pick competitor…</option>
-                      <option v-for="e in cat.enrolments" :key="e.id" :value="e.competitor.id" :disabled="e.competitor.id === newMatchWhiteId">{{ e.competitor.name }}</option>
+                    <select v-model="newMatchRedRef" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option :value="null" disabled>Pick competitor or match…</option>
+                      <optgroup v-if="cat.enrolments.length" label="Competitors">
+                        <option v-for="e in cat.enrolments" :key="`r-c-${e.id}`" :value="`competitor:${e.competitor.id}`">{{ e.competitor.name }}</option>
+                      </optgroup>
+                      <optgroup v-if="cat.matches.length" label="Winners of…">
+                        <option v-for="m in cat.matches" :key="`r-m-${m.id}`" :value="`match:${m.id}`">#{{ m.position }} — {{ matchLabel(m) }}</option>
+                      </optgroup>
                     </select>
                   </div>
                   <div>
                     <label style="display: block; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; margin-bottom: 4px">White</label>
-                    <select v-model="newMatchWhiteId" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
-                      <option :value="null" disabled>Pick competitor…</option>
-                      <option v-for="e in cat.enrolments" :key="e.id" :value="e.competitor.id" :disabled="e.competitor.id === newMatchRedId">{{ e.competitor.name }}</option>
+                    <select v-model="newMatchWhiteRef" style="width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: white">
+                      <option :value="null" disabled>Pick competitor or match…</option>
+                      <optgroup v-if="cat.enrolments.length" label="Competitors">
+                        <option v-for="e in cat.enrolments" :key="`w-c-${e.id}`" :value="`competitor:${e.competitor.id}`">{{ e.competitor.name }}</option>
+                      </optgroup>
+                      <optgroup v-if="cat.matches.length" label="Winners of…">
+                        <option v-for="m in cat.matches" :key="`w-m-${m.id}`" :value="`match:${m.id}`">#{{ m.position }} — {{ matchLabel(m) }}</option>
+                      </optgroup>
                     </select>
                   </div>
                 </div>

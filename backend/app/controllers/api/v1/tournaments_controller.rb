@@ -10,7 +10,11 @@ module Api
 
       def show
         tournament = Tournament.includes(
-          categories: [ :shiajos, { enrolments: :competitor } ]
+          categories: [
+            :shiajos,
+            { enrolments: :competitor },
+            { matches: [ :shiajo, :red_competitor, :white_competitor ] }
+          ]
         ).find(params[:id])
         render json: tournament_detail_payload(tournament)
       end
@@ -65,7 +69,19 @@ module Api
           category_type: { id: c.category_type.id, name: c.category_type.name, gender: c.category_type.gender },
           shiajo_count: c.shiajos.count,
           shiajos: c.shiajos.map { |s| { id: s.id, name: s.name, active: s.active } },
-          enrolments: c.enrolments.map { |e| enrolment_payload(e) }
+          enrolments: c.enrolments.map { |e| enrolment_payload(e) },
+          matches: c.matches.sort_by { |m| [ m.position || 0, m.id ] }.map { |m| match_summary(m) }
+        }
+      end
+
+      def match_summary(m)
+        {
+          id: m.id,
+          position: m.position,
+          status: m.status,
+          shiajo: { id: m.shiajo.id, name: m.shiajo.name },
+          red_competitor: m.red_competitor && { id: m.red_competitor.id, name: m.red_competitor.name },
+          white_competitor: m.white_competitor && { id: m.white_competitor.id, name: m.white_competitor.name }
         }
       end
 

@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       resources :categories, only: [] do
         resources :shiajos, only: [ :create ]
         resources :enrolments, only: [ :index, :create ]
+        resources :matches, only: [ :create ]
       end
       resources :enrolments, only: [ :destroy ]
       resources :matches, only: [ :show ] do
@@ -36,6 +37,7 @@ Rails.application.routes.draw do
       resources :seasons, only: [ :index, :create ]
       resources :disciplines, only: [ :index ]
       resources :competitors, only: [ :index, :create, :destroy ]
+      resources :rule_sets, only: [ :index ]
     end
   end
 end

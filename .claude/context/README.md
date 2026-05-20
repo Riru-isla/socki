@@ -28,6 +28,8 @@ Convention: ✅ = working today, ⚠️ = code exists but broken / not wired, �
 
 ## Future / planned (`future/`)
 
+Single-feature issues (load only the relevant one):
+
 | File | Issue |
 | ---- | ----- |
 | [`future/12-draws-brackets.md`](future/12-draws-brackets.md)               | #12 |
@@ -41,9 +43,19 @@ Convention: ✅ = working today, ⚠️ = code exists but broken / not wired, �
 | [`future/20-error-states.md`](future/20-error-states.md)                   | #20 |
 | [`future/21-competitor-import.md`](future/21-competitor-import.md)         | #21 |
 
+Tracking issues with sub-issues (load these when working on any of their children):
+
+| File | Issue | Covers |
+| ---- | ----- | ------ |
+| [`future/34-admin-dashboard.md`](future/34-admin-dashboard.md)             | #34 | director's dashboard — grid view, edit/void events, override status (subs #28–30) |
+| [`future/35-audience-views.md`](future/35-audience-views.md)               | #35 | delegado / spectator / streaming views + shared payload contract (subs #31–33) |
+| [`future/36-teams.md`](future/36-teams.md)                                 | #36 | **post-1.0** team-based competition + distilled team-readiness constraints for in-1.0 issues |
+
 ## Loading rules
 
 - Working on a feature: load the relevant `backend/<feature>.md` and `frontend/<feature>.md`. They reference each other via this index.
 - Designing something new: skim `backend/domain-model.md` first, then load `future/<n>-…md` if a GH issue exists.
 - Hitting a real-time bug: load `backend/action-cable.md` + `frontend/composables.md` together.
+- Working on a sub-issue of a tracking parent: load the parent's `future/<n>-….md` first — it carries the shared design notes the individual sub-issue body doesn't repeat.
+- Touching anything in `[area:scoring]` or `[area:bracket]`: also load [`future/36-teams.md`](future/36-teams.md). It lists the team-readiness design constraints that current code preserves; the sub-issues won't make sense without it.
 - **Never assume** a `future/` file describes existing code. They describe intent.
